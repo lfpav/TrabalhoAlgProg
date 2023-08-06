@@ -34,10 +34,10 @@ A funcao usa sprintf para transformar o int levelnumber recebido em uma string, 
 A funcao entao concatena strings para gerar uma string no formato "Level[levelNumber].txt" para poder abrir o arquivo de Level na pasta do jogo
 O arquivo de level precisa comecar com Level, ter letra maiuscula, ter um int depois do Level e ser um arquivo txt
 Esse arquivo precisa ter MAPLINES linhas e MAPCOLUMNS colunas para a funcao funcionar direito
-A partir do arquivo determina a posicao inicial do jogador, inimigos e outros elementos do mapa, armazenando essas informações em uma matriz
+A partir do arquivo determina a posicao inicial do jogador, inimigos e outros elementos do mapa, armazenando essas informacoes em uma matriz
 com MAPLINES linhas e MAPCOLUMNS colunas
 */
-void CarregaMapa(int levelNumber, char CurrentLevelMatrix[MAPLINES][MAPCOLUMNS],Vector2 *posplayer)
+void CarregaMapa(int levelNumber, char CurrentLevelMatrix[MAPLINES][MAPCOLUMNS],PLAYER *player)
 {
     char level_N_aux[12];
     char levelName[20] = "Level";
@@ -53,12 +53,13 @@ void CarregaMapa(int levelNumber, char CurrentLevelMatrix[MAPLINES][MAPCOLUMNS],
             CurrentLevelMatrix[iMap][jMap] = fgetc(mapaLevel);
             if(CurrentLevelMatrix[iMap][jMap]=='J')
             {
-                posplayer->x = iMap;
-                posplayer->y = jMap;
+                player->posplayer.x = iMap;
+                player->posplayer.y = jMap;
             }
         }
 
     }
+    printf("%f", player->posplayer.x);
     fclose(mapaLevel);
     return;
 
@@ -70,7 +71,7 @@ int main()
     int iMapRender,jMapRender;
     char CurrentLevelMatrix[MAPLINES][MAPCOLUMNS]; //definicao da matriz para passar para a funcao CaregaMapa
     PLAYER jogador; //criacao do jogador
-    CarregaMapa(1,CurrentLevelMatrix,&jogador.posplayer);
+    CarregaMapa(1,CurrentLevelMatrix,&jogador);
 
 
     while(!WindowShouldClose())

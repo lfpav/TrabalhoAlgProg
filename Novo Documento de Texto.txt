@@ -1,0 +1,4 @@
+A fazer
+- renderizar player
+- movimento do player
+-renderizar paredes
