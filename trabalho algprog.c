@@ -13,7 +13,7 @@ typedef struct Inimigo
     Vector2 posInimigo;//Vector2 eh um struct com float x e y, util para armazenar posicao
     int tipoInimigo;
     int HP;
-    bool ativo = false;
+    bool ativo;
 
 
 
@@ -22,10 +22,10 @@ typedef struct Inimigo
 typedef struct Player
 {
     Vector2 posplayer;
-    float HP = 3;
-    int moveSpeed = 1;
-    float dmg =1;
-    int bombAmount = 5;
+    float HP ;
+    int moveSpeed;
+    float dmg;
+    int bombAmount;
 
 
 }PLAYER;
