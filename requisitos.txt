@@ -15,5 +15,10 @@ REQUISITOS MINIMOS:
 - implementar armadilhas
 - bombas coletaveis
 - menu
+- UI mostrando a fase, stats do player, tempo restante, vidas
+- 5 fases
 
 REQUISITOS EXTRA:
+-som
+-graficos
+-
