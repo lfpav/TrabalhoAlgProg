@@ -7,6 +7,9 @@
 #define MAPCOLUMNS 60
 #define MAX_INIMIGOS 15
 #define MAX_OBJECTS 999
+#define TURQUOISE (Color){0,159,150,255}
+/* declaracao de variaveis */
+
 
 
 typedef struct Objetos_Estaticos_t
@@ -14,7 +17,7 @@ typedef struct Objetos_Estaticos_t
     Vector2 posObjeto;
     int tipoObjeto;
     bool ativo;
-}OBJETO_ESTATICO;
+} OBJETO_ESTATICO;
 
 typedef struct Inimigo_t
 {
@@ -50,7 +53,14 @@ typedef struct Status_Jogo_t
 
 
 
-}STATUS;
+} STATUS;
+
+STATUS status_jogo_atual;
+Texture2D texturaTitle;
+char titleText[] = "haur";
+Font fonteTitle;
+int tamanhotitle;
+bool GameStart = false;
 /* CarregaMapa recebe o numero da fase desejada e carrega o arquivo correspondente ao nivel desejado.
 A funcao usa sprintf para transformar o int levelnumber recebido em uma string, e 12 eh tamanho o suficiente para qualquer int
 A funcao entao concatena strings para gerar uma string no formato "mapa[levelNumber].txt" para poder abrir o arquivo de Level na pasta do jogo
@@ -59,6 +69,7 @@ Esse arquivo precisa ter MAPLINES linhas e MAPCOLUMNS colunas para a funcao func
 A partir do arquivo determina a posicao inicial do jogador, inimigos e outros elementos do mapa, armazenando essas informacoes em uma matriz
 com MAPLINES linhas e MAPCOLUMNS colunas
 */
+
 
 void SalvaJogo()
 {
@@ -94,6 +105,7 @@ void Mover()
 {
 
 }
+
 void CarregaMapa(int levelNumber, char CurrentLevelMatrix[MAPLINES][MAPCOLUMNS],PLAYER *player, INIMIGO Inimigos[],int *InimigosNaFase)
 {
     char level_N_aux[12];
@@ -146,31 +158,88 @@ void CarregaMapa(int levelNumber, char CurrentLevelMatrix[MAPLINES][MAPCOLUMNS],
 
 }
 
+
+
+
 void NovoJogo(STATUS *s)
 {
-  s->player.HP = 5;
-  s->player.bombAmount=3;
-  s->player.dmg = 1;
-  s->mapaAtual=1;
-  CarregaMapa(s->mapaAtual,s->CurrentLevelMatrix,&s->player,s->Inimigos,&s->InimigosNaFase);
-  return;
+    s->player.HP = 5;
+    s->player.bombAmount=3;
+    s->player.dmg = 1;
+    s->mapaAtual=1;
+    CarregaMapa(s->mapaAtual,s->CurrentLevelMatrix,&s->player,s->Inimigos,&s->InimigosNaFase);
+    GameStart = true;
+    return;
+
+}
+void Menu(int type)
+{
+    if(IsKeyPressed(KEY_N))
+    {
+        NovoJogo(&status_jogo_atual);
+    }
+    if(IsKeyPressed(KEY_S)&&type==1)
+    {
+        SalvaJogo();
+    }
+    if(IsKeyPressed(KEY_Q))
+    {
+        CloseWindow();
+    }
+    if(IsKeyPressed(KEY_C))
+    {
+        CarregaJogo();
+    }
+
+
+
+}
+void TitleScreen()
+{
+    DrawTexture(texturaTitle,0,0,WHITE);
+    DrawTextEx(fonteTitle,"Froggers frog frog",(Vector2){202,800/4},60,0,BLACK);
+    DrawTextEx(fonteTitle,"Froggers frog frog",(Vector2){205,812/4},60,0,TURQUOISE);
+    DrawTextEx(fonteTitle,"Novo Jogo - N",(Vector2){222,447},60,0,BLACK);
+    DrawTextEx(fonteTitle,"Novo Jogo - N",(Vector2){225,450},60,0,TURQUOISE);
+    DrawTextEx(fonteTitle,"Carregar Jogo - C",(Vector2){222,547},60,0,BLACK);
+    DrawTextEx(fonteTitle,"Carregar Jogo - C",(Vector2){225,550},60,0,TURQUOISE);
+    DrawTextEx(fonteTitle,"Sair - Q",(Vector2){222,647},60,0,BLACK);
+    DrawTextEx(fonteTitle,"Sair - Q",(Vector2){225,650},60,0,TURQUOISE);
+    Menu(0);
+
+
+
+
+
 
 }
 int main()
 {
-    InitWindow(800,800, "trabalho");
+    InitWindow(900,900, "trabalho");
     SetTargetFPS(30);
     int iMapRender,jMapRender;
-    STATUS status_jogo_atual;
-    NovoJogo(&status_jogo_atual);
+    texturaTitle = LoadTexture("TitleScreen.png");
+    fonteTitle = LoadFontEx("SunnyspellsRegular-MV9ze.otf",60,NULL,0);
     //CarregaMapa(1,CurrentLevelMatrix,&jogador,Inimigos,&InimigosNaFase);
     printf("%d",status_jogo_atual.InimigosNaFase);
+    printf(" \n %d",tamanhotitle);
 
     while(!WindowShouldClose())
     {
-        BeginDrawing();
+         while(!GameStart)
+         {
+            BeginDrawing();
+            ClearBackground(WHITE);
+            TitleScreen();
+            EndDrawing();
 
+         }
+
+
+        BeginDrawing();
+        ClearBackground(WHITE);
         EndDrawing();
+
 
     }
 
