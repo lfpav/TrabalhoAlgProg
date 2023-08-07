@@ -61,18 +61,27 @@ char titleText[] = "haur";
 Font fonteTitle;
 int tamanhotitle;
 bool GameStart = false;
-/* CarregaMapa recebe o numero da fase desejada e carrega o arquivo correspondente ao nivel desejado.
-A funcao usa sprintf para transformar o int levelnumber recebido em uma string, e 12 eh tamanho o suficiente para qualquer int
-A funcao entao concatena strings para gerar uma string no formato "mapa[levelNumber].txt" para poder abrir o arquivo de Level na pasta do jogo
-O arquivo de level precisa comecar com mapa, ter letra minuscula, ter um int depois do mapa e ser um arquivo txt
-Esse arquivo precisa ter MAPLINES linhas e MAPCOLUMNS colunas para a funcao funcionar direito
-A partir do arquivo determina a posicao inicial do jogador, inimigos e outros elementos do mapa, armazenando essas informacoes em uma matriz
-com MAPLINES linhas e MAPCOLUMNS colunas
-*/
 
 
-void SalvaJogo()
+/* A funcao SalvaJogo recebe o ponteiro para o o struct STATUS atual, e armazena as informacoes relevantes em um arquivo com uma estrutura semelhante aos arquivos de mapa,
+mas com informacoes adicionais nas linhas posteriores */
+void SalvaJogo(STATUS *s)
 {
+    FILE* savegame;
+    savegame = fopen("JogoSalvo.txt","w");
+    for(int i=0;i<MAPLINES;i++)
+    {
+        for(int j=0;j<MAPCOLUMNS+1;j++)
+        {   if(j<MAPCOLUMNS)
+            fprintf(savegame,"%c",s->CurrentLevelMatrix[i][j]);
+            if(j==MAPCOLUMNS)
+            fprintf(savegame,"%c",'\n');
+
+        }
+    }
+    fclose(savegame);
+
+
 
 }
 
@@ -105,7 +114,14 @@ void Mover()
 {
 
 }
-
+/* CarregaMapa recebe o numero da fase desejada e carrega o arquivo correspondente ao nivel desejado.
+A funcao usa sprintf para transformar o int levelnumber recebido em uma string, e 12 eh tamanho o suficiente para qualquer int
+A funcao entao concatena strings para gerar uma string no formato "mapa[levelNumber].txt" para poder abrir o arquivo de Level na pasta do jogo
+O arquivo de level precisa comecar com mapa, ter letra minuscula, ter um int depois do mapa e ser um arquivo txt
+Esse arquivo precisa ter MAPLINES linhas e MAPCOLUMNS colunas para a funcao funcionar direito
+A partir do arquivo determina a posicao inicial do jogador, inimigos e outros elementos do mapa, armazenando essas informacoes em uma matriz
+com MAPLINES linhas e MAPCOLUMNS colunas
+*/
 void CarregaMapa(int levelNumber, char CurrentLevelMatrix[MAPLINES][MAPCOLUMNS],PLAYER *player, INIMIGO Inimigos[],int *InimigosNaFase)
 {
     char level_N_aux[12];
@@ -119,9 +135,13 @@ void CarregaMapa(int levelNumber, char CurrentLevelMatrix[MAPLINES][MAPCOLUMNS],
     *InimigosNaFase=0;
     for(int iMap=0; iMap<MAPLINES; iMap++)
     {
-        for(int jMap=0; jMap<MAPCOLUMNS; jMap++)
+        for(int jMap=0; jMap<MAPCOLUMNS+1; jMap++)
         {
-            CurrentLevelMatrix[iMap][jMap] = fgetc(mapaLevel);
+            char charTemp = fgetc(mapaLevel);
+            CurrentLevelMatrix[iMap][jMap] = charTemp;
+
+
+            printf("%c",CurrentLevelMatrix[iMap][jMap]);
             switch(CurrentLevelMatrix[iMap][jMap])
             {
             case 'J':
@@ -159,7 +179,8 @@ void CarregaMapa(int levelNumber, char CurrentLevelMatrix[MAPLINES][MAPCOLUMNS],
 }
 
 
-
+/* A funcao NovoJogo recebe um struct STATUS, criado ao inicializar o jogo, que armazena as principais informacos sobre o jogo, e confere a ele os valores padrao de um novo jogo,
+tambem coloca a bool GameStart como true, para o jogo sair do menu principal e comecar */
 
 void NovoJogo(STATUS *s)
 {
@@ -172,6 +193,9 @@ void NovoJogo(STATUS *s)
     return;
 
 }
+
+/* A funcao Menu recebe um int type, 0 para o menu principal e 1 para o menu dentro do jogo, limitando as opcoes dependendo do contexto.
+Dependendo da tecla apertada realiza outras funcoes de manipulacao do estado do jogo */
 void Menu(int type)
 {
     if(IsKeyPressed(KEY_N))
@@ -180,7 +204,7 @@ void Menu(int type)
     }
     if(IsKeyPressed(KEY_S)&&type==1)
     {
-        SalvaJogo();
+        SalvaJogo(&status_jogo_atual);
     }
     if(IsKeyPressed(KEY_Q))
     {
@@ -194,6 +218,8 @@ void Menu(int type)
 
 
 }
+/* A funcao TitleScreen renderiza o fundo e outros elementos da tela de titulo, e chama a fncao Menu com o type 0, limitando as opcoes disponiveis para
+Novo Jogo, Carregar Jogo ou Sair */
 void TitleScreen()
 {
     DrawTexture(texturaTitle,0,0,WHITE);
@@ -234,6 +260,7 @@ int main()
             EndDrawing();
 
          }
+         Menu(1);
 
 
         BeginDrawing();
