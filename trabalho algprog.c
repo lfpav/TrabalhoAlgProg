@@ -144,6 +144,7 @@ void CarregaMapa(int levelNumber, char CurrentLevelMatrix[MAPLINES][MAPCOLUMNS],
     strcat(level_N_aux,".txt");
     strcat(levelName,level_N_aux);
     puts(levelName);
+    //teste !!!!!!!!
     FILE* mapaLevel = fopen(levelName,"r");
     *InimigosNaFase=0;
     for(int iMap=0; iMap<MAPLINES; iMap++)
