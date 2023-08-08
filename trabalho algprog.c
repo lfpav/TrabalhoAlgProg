@@ -8,6 +8,7 @@
 #define MAX_INIMIGOS 15
 #define MAX_OBJECTS 999
 #define TURQUOISE (Color){0,159,150,255}
+#include "raymath.h"
 /* declaracao de variaveis */
 
 
@@ -85,7 +86,7 @@ void SalvaJogo(STATUS *s)
 
 
 }
-
+/* A funcao Carregajogo recebe o ponteiro para o struct STATUS atual, abre o arquivo JogoSalvo.txt, le as informacoes relevantes para o jogo e as armazena no struct */
 void CarregaJogo(STATUS *s)
 {
     FILE* savegame;
@@ -100,8 +101,10 @@ void CarregaJogo(STATUS *s)
     }
     fscanf(savegame,"%d\n%d\n%.2f\n%d",&s->player.HP,&s->player.bombAmount,&s->tempo_restante,&s->mapaAtual);
     fclose(savegame);
+    GameStart = true;
 
 }
+
 
 
 
@@ -125,6 +128,24 @@ int PodeMoverInimigo()
 }
 void Mover()
 {
+
+}
+
+void JogoRenderer(STATUS *s)
+{
+    DrawRectangleV(Vector2Scale(s->player.posplayer,15),(Vector2){15,15},GREEN);
+    for(int i=0;i<MAPLINES;i++)
+    {
+        for(int j=0;j<MAPCOLUMNS;j++)
+        {
+            if(s->CurrentLevelMatrix[i][j]=='#')
+            {
+                DrawRectangle(j*15,i*15,15,15,BROWN);
+            }
+        }
+    }
+    DrawRectangle(0,450,900,300,RED);
+    //DrawTextEx()
 
 }
 /* CarregaMapa recebe o numero da fase desejada e carrega o arquivo correspondente ao nivel desejado.
@@ -206,6 +227,7 @@ void NovoJogo(STATUS *s)
 
 }
 
+
 /* A funcao Menu recebe um int type, 0 para o menu principal e 1 para o menu dentro do jogo, limitando as opcoes dependendo do contexto.
 Dependendo da tecla apertada realiza outras funcoes de manipulacao do estado do jogo */
 void Menu(int type)
@@ -235,8 +257,8 @@ Novo Jogo, Carregar Jogo ou Sair */
 void TitleScreen()
 {
     DrawTexture(texturaTitle,0,0,WHITE);
-    DrawTextEx(fonteTitle,"Froggers frog frog",(Vector2){202,800/4},60,0,BLACK);
-    DrawTextEx(fonteTitle,"Froggers frog frog",(Vector2){205,812/4},60,0,TURQUOISE);
+    DrawTextEx(fonteTitle,"Froggers frog frog",(Vector2){202,150},60,0,BLACK);
+    DrawTextEx(fonteTitle,"Froggers frog frog",(Vector2){205,153},60,0,TURQUOISE);
     DrawTextEx(fonteTitle,"Novo Jogo - N",(Vector2){222,447},60,0,BLACK);
     DrawTextEx(fonteTitle,"Novo Jogo - N",(Vector2){225,450},60,0,TURQUOISE);
     DrawTextEx(fonteTitle,"Carregar Jogo - C",(Vector2){222,547},60,0,BLACK);
@@ -253,7 +275,7 @@ void TitleScreen()
 }
 int main()
 {
-    InitWindow(900,900, "trabalho");
+    InitWindow(900,750, "trabalho");
     SetTargetFPS(30);
     int iMapRender,jMapRender;
     texturaTitle = LoadTexture("TitleScreen.png");
@@ -277,6 +299,7 @@ int main()
 
         BeginDrawing();
         ClearBackground(WHITE);
+        JogoRenderer(&status_jogo_atual);
         EndDrawing();
 
 
