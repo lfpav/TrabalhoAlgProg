@@ -33,8 +33,8 @@ typedef struct Inimigo_t
 typedef struct Player_t
 {
     Vector2 posplayer;
-    float HP ;
-    float dmg;
+    int HP ;
+    int dmg;
     int bombAmount;
 
 
@@ -79,14 +79,27 @@ void SalvaJogo(STATUS *s)
 
         }
     }
+    fprintf(savegame,"%d\n%d\n%.2f\n%d",s->player.HP,s->player.bombAmount,s->tempo_restante,s->mapaAtual);
     fclose(savegame);
 
 
 
 }
 
-void CarregaJogo()
+void CarregaJogo(STATUS *s)
 {
+    FILE* savegame;
+    savegame = fopen("JogoSalvo.txt","r");
+    for(int i=0;i<MAPLINES;i++)
+    {
+        for(int j=0;j<MAPCOLUMNS+1;j++)
+        {
+            s->CurrentLevelMatrix[i][j]=fgetc(savegame);
+        }
+
+    }
+    fscanf(savegame,"%d\n%d\n%.2f\n%d",&s->player.HP,&s->player.bombAmount,&s->tempo_restante,&s->mapaAtual);
+    fclose(savegame);
 
 }
 
@@ -137,22 +150,20 @@ void CarregaMapa(int levelNumber, char CurrentLevelMatrix[MAPLINES][MAPCOLUMNS],
     {
         for(int jMap=0; jMap<MAPCOLUMNS+1; jMap++)
         {
-            char charTemp = fgetc(mapaLevel);
-            CurrentLevelMatrix[iMap][jMap] = charTemp;
 
+            CurrentLevelMatrix[iMap][jMap] = fgetc(mapaLevel);
 
-            printf("%c",CurrentLevelMatrix[iMap][jMap]);
             switch(CurrentLevelMatrix[iMap][jMap])
             {
             case 'J':
-                player->posplayer.x = iMap;
-                player->posplayer.y = jMap;
+                player->posplayer.x = jMap;
+                player->posplayer.y = iMap;
                 break;
             case 'I':
                 if(*InimigosNaFase<=MAX_INIMIGOS)
                 {
-                    Inimigos[*InimigosNaFase].posInimigo.x = iMap;
-                    Inimigos[*InimigosNaFase].posInimigo.y = jMap;
+                    Inimigos[*InimigosNaFase].posInimigo.x = jMap;
+                    Inimigos[*InimigosNaFase].posInimigo.y = iMap;
                     Inimigos[*InimigosNaFase].tipoInimigo = 1;
                     Inimigos[*InimigosNaFase].HP = 5;
                     Inimigos[*InimigosNaFase].ativo = true;
@@ -212,7 +223,7 @@ void Menu(int type)
     }
     if(IsKeyPressed(KEY_C))
     {
-        CarregaJogo();
+        CarregaJogo(&status_jogo_atual);
     }
 
 
