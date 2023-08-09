@@ -24,6 +24,7 @@ typedef struct Objetos_Estaticos_t
 typedef struct Inimigo_t
 {
     Vector2 posInimigo;//Vector2 eh um struct com float x e y, util para armazenar posicao
+    Vector2 dirInimigo;
     int tipoInimigo;
     int HP;
     bool ativo;
@@ -53,15 +54,11 @@ typedef struct Status_Jogo_t
     int mapaAtual;
     int InimigosNaFase;
 
-
-
 } STATUS;
 
 STATUS status_jogo_atual;
 Texture2D texturaTitle;
-char titleText[] = "haur";
 Font fonteTitle;
-int tamanhotitle;
 bool GameStart = false;
 Texture2D sapo;
 time_t tempo_inicio;
@@ -74,21 +71,19 @@ void SalvaJogo(STATUS *s)
 {
     FILE* savegame;
     savegame = fopen("JogoSalvo.txt","w");
-    for(int i=0;i<MAPLINES;i++)
+    for(int i=0; i<MAPLINES; i++)
     {
-        for(int j=0;j<MAPCOLUMNS+1;j++)
-        {   if(j<MAPCOLUMNS)
-            fprintf(savegame,"%c",s->CurrentLevelMatrix[i][j]);
+        for(int j=0; j<MAPCOLUMNS+1; j++)
+        {
+            if(j<MAPCOLUMNS)
+                fprintf(savegame,"%c",s->CurrentLevelMatrix[i][j]);
             if(j==MAPCOLUMNS)
-            fprintf(savegame,"%c",'\n');
+                fprintf(savegame,"%c",'\n');
 
         }
     }
-    s->tempo_restante = tempo_atual;
-    fprintf(savegame,"%d\n%d\n%d\n%d",s->player.HP,s->player.bombAmount,s->tempo_restante,s->mapaAtual);
+    fprintf(savegame,"%d\n%d\n%d\n%d",s->player.HP,s->player.bombAmount,tempo_atual,s->mapaAtual);
     fclose(savegame);
-
-
 
 }
 
@@ -105,8 +100,12 @@ void DespausaJogo()
 {
 
 }
-int PodeMover(PLAYER *player)
+int PodeMover(Vector2 *dir)
 {
+    if(dir->x<30||dir->x>=840||dir->y<30||dir->y>390)
+    return 0;
+    else
+    return 1;
 
 
 }
@@ -118,14 +117,57 @@ void Mover()
 {
 
 }
+void gerarDirecaoAleatoria(Vector2 *dir)
+{
+    int dx,dy;
+    do
+    {
+        dx= -1 + rand() % 3;
+    }
+    while(dx==0);
+    do
+    {
+        dy=-1 + rand()%3;
+    }
+    while(dy==0);
+    dir->x=dx;
+    dir->y=dy;
+}
+int moveInimigo(INIMIGO *Inim_ptr,int *moveDuration)
+{
+    Vector2 newPos;
+    if(*moveDuration==0)
+    {
+        gerarDirecaoAleatoria(&Inim_ptr->dirInimigo);
+        *moveDuration = 10 +rand()%60;
+        newPos = Inim_ptr->dirInimigo;
+        newPos=Vector2Add(newPos,Inim_ptr->posInimigo);
+    }
+    else
+    {
+        newPos = Inim_ptr->dirInimigo;
+        newPos=Vector2Add(newPos,Inim_ptr->posInimigo);
+        *moveDuration-=1;
+    }
+    if(!PodeMover(&newPos))
+    *moveDuration=0;
+    else
+    {
+        Inim_ptr->posInimigo.x+=Inim_ptr->dirInimigo.x*2;
+        Inim_ptr->posInimigo.y+=Inim_ptr->dirInimigo.y*2;
+    }
+    //printf("%.5f %.5f \n",Inim_ptr->dirInimigo.y,newPos.y);
 
+}
+
+/* A funcao JogoRenderer desenha os elementos do jogo na tela */
 void JogoRenderer(STATUS *s)
 {
-    DrawRectangleV(Vector2Scale(s->player.posplayer,15),(Vector2){30,30},GREEN);
-    DrawTextureEx(sapo,Vector2Scale(s->player.posplayer,30),0,1,WHITE);
-    for(int i=0;i<MAPLINES;i++)
+    DrawRectangleV(s->player.posplayer,(Vector2){30,30},GREEN);
+    DrawTextureEx(sapo,Vector2Scale(s->player.posplayer,3),0,1,WHITE);
+    for(int i=0; i<MAPLINES; i++)
     {
-        for(int j=0;j<MAPCOLUMNS;j++)
+        for(int j=0; j<MAPCOLUMNS; j++)
         {
             if(s->CurrentLevelMatrix[i][j]=='#')
             {
@@ -134,9 +176,9 @@ void JogoRenderer(STATUS *s)
         }
     }
     DrawRectangle(0,450,900,300,RED);
-    for(int k=0;k<s->InimigosNaFase;k++)
+    for(int k=0; k<s->InimigosNaFase; k++)
     {
-        DrawRectangleV(Vector2Scale(s->Inimigos[k].posInimigo,15),(Vector2){30,30},RED);
+        DrawRectangleV(s->Inimigos[k].posInimigo,(Vector2){30,30},RED);
     }
     //DrawTextEx()
 
@@ -168,29 +210,27 @@ void CarregaMapa(STATUS *s,int type)
     {
         for(int jMap=0; jMap<MAPCOLUMNS+1; jMap++)
         {
-
             s->CurrentLevelMatrix[iMap][jMap] = fgetc(mapaLevel);
-
             switch(s->CurrentLevelMatrix[iMap][jMap])
             {
-            case 'J':
-                s->player.posplayer.x = jMap;
-                s->player.posplayer.y = iMap;
+                case 'J':
+                s->player.posplayer.x = jMap*15;
+                s->player.posplayer.y = iMap*15;
                 break;
-            case 'I':
+                case 'I':
                 if(s->InimigosNaFase<=MAX_INIMIGOS)
                 {
-                    s->Inimigos[s->InimigosNaFase].posInimigo.x = jMap;
-                    s->Inimigos[s->InimigosNaFase].posInimigo.y = iMap;
+                    s->Inimigos[s->InimigosNaFase].posInimigo.x = jMap*15;
+                    s->Inimigos[s->InimigosNaFase].posInimigo.y = iMap*15;
                     s->Inimigos[s->InimigosNaFase].tipoInimigo = 1;
                     s->Inimigos[s->InimigosNaFase].HP = 5;
                     s->Inimigos[s->InimigosNaFase].ativo = true;
+                    gerarDirecaoAleatoria(&s->Inimigos[s->InimigosNaFase].dirInimigo);
                     s->InimigosNaFase+=1;
-                    break;
                 }
-            default:
                 break;
-
+                default:
+                break;
             }
         }
 
@@ -203,7 +243,7 @@ void CarregaMapa(STATUS *s,int type)
     }
     if(type==1)
     {
-            fscanf(mapaLevel,"%d\n%d\n%d\n%d\n%d",&s->player.HP,&s->player.bombAmount,&s->tempo_restante,&s->mapaAtual);
+        fscanf(mapaLevel,"%d\n%d\n%d\n%d\n%d",&s->player.HP,&s->player.bombAmount,&s->tempo_restante,&s->mapaAtual);
 
     }
     //printf("%f", player->posplayer.x);
@@ -222,9 +262,9 @@ void NovoJogo(STATUS *s)
     s->player.bombAmount=3;
     s->player.dmg = 1;
     s->mapaAtual=1;
-    s->tempo_restante=0;
     CarregaMapa(s,0);
     GameStart = true;
+    s->tempo_restante=0;
 
 
 }
@@ -233,6 +273,7 @@ void CarregaJogo(STATUS *s)
 {
     CarregaMapa(s,1);
     GameStart = true;
+    tempo_inicio = time(NULL);
 
 }
 
@@ -258,8 +299,6 @@ void Menu(int type)
         CarregaJogo(&status_jogo_atual);
     }
 
-
-
 }
 /* A funcao TitleScreen renderiza o fundo e outros elementos da tela de titulo, e chama a fncao Menu com o type 0, limitando as opcoes disponiveis para
 Novo Jogo, Carregar Jogo ou Sair */
@@ -276,41 +315,37 @@ void TitleScreen()
     DrawTextEx(fonteTitle,"Sair - Q",(Vector2){225,650},60,0,TURQUOISE);
     Menu(0);
 
-
-
-
-
-
 }
 int main()
 {
     InitWindow(900,750, "trabalho");
     SetTargetFPS(30);
+    srand(time(NULL));
     texturaTitle = LoadTexture("TitleScreen.png");
     fonteTitle = LoadFontEx("SunnyspellsRegular-MV9ze.otf",60,NULL,0);
     sapo=LoadTexture("sapo.png");
-    //CarregaMapa(1,CurrentLevelMatrix,&jogador,Inimigos,&InimigosNaFase);
     printf("%d",status_jogo_atual.InimigosNaFase);
-    printf(" \n %d",tamanhotitle);
+    int moveDuration =0;
 
 
     while(!WindowShouldClose())
     {
-         while(!GameStart)
-         {
+        while(!GameStart)
+        {
             BeginDrawing();
             ClearBackground(WHITE);
             TitleScreen();
             tempo_inicio=time(NULL);
             EndDrawing();
 
-         }
-         Menu(1);
+        }
+        Menu(1);
 
         BeginDrawing();
         ClearBackground(WHITE);
         tempo_atual = time(NULL)-tempo_inicio+status_jogo_atual.tempo_restante;
         JogoRenderer(&status_jogo_atual);
+        moveInimigo(&status_jogo_atual.Inimigos[0],&moveDuration);
         DrawText(TextFormat("Tempo:%d s",tempo_atual),0,500,50,BLACK);
         DrawText(TextFormat("Vida:%d",status_jogo_atual.player.HP),0,550,50,BLACK);
         DrawText(TextFormat("Bombas:%d",status_jogo_atual.player.bombAmount),0,600,50,BLACK);
