@@ -9,6 +9,7 @@
 #define MAX_OBJECTS 999
 #define TURQUOISE (Color){0,159,150,255}
 #include "raymath.h"
+#include <time.h>
 /* declaracao de variaveis */
 
 
@@ -62,6 +63,7 @@ char titleText[] = "haur";
 Font fonteTitle;
 int tamanhotitle;
 bool GameStart = false;
+Texture2D sapo;
 
 
 /* A funcao SalvaJogo recebe o ponteiro para o o struct STATUS atual, e armazena as informacoes relevantes em um arquivo com uma estrutura semelhante aos arquivos de mapa,
@@ -133,7 +135,8 @@ void Mover()
 
 void JogoRenderer(STATUS *s)
 {
-    DrawRectangleV(Vector2Scale(s->player.posplayer,15),(Vector2){15,15},GREEN);
+    DrawRectangleV(Vector2Scale(s->player.posplayer,15),(Vector2){30,30},GREEN);
+    DrawTextureEx(sapo,Vector2Scale(s->player.posplayer,30),0,1,WHITE);
     for(int i=0;i<MAPLINES;i++)
     {
         for(int j=0;j<MAPCOLUMNS;j++)
@@ -149,8 +152,7 @@ void JogoRenderer(STATUS *s)
 
 }
 /* CarregaMapa recebe o numero da fase desejada e carrega o arquivo correspondente ao nivel desejado.
-A funcao usa sprintf para transformar o int levelnumber recebido em uma string, e 12 eh tamanho o suficiente para qualquer int
-A funcao entao concatena strings para gerar uma string no formato "mapa[levelNumber].txt" para poder abrir o arquivo de Level na pasta do jogo
+A funcao usa Textformat junta o numero do level com mapa e .txt para carregar o mapa, substituindo a necessidade de diversas concatenacoes de strings e sprintf
 O arquivo de level precisa comecar com mapa, ter letra minuscula, ter um int depois do mapa e ser um arquivo txt
 Esse arquivo precisa ter MAPLINES linhas e MAPCOLUMNS colunas para a funcao funcionar direito
 A partir do arquivo determina a posicao inicial do jogador, inimigos e outros elementos do mapa, armazenando essas informacoes em uma matriz
@@ -158,12 +160,8 @@ com MAPLINES linhas e MAPCOLUMNS colunas
 */
 void CarregaMapa(int levelNumber, char CurrentLevelMatrix[MAPLINES][MAPCOLUMNS],PLAYER *player, INIMIGO Inimigos[],int *InimigosNaFase)
 {
-    char level_N_aux[12];
-    char levelName[20] = "mapa";
+    char *levelName = TextFormat("mapa%d.txt",levelNumber);
     int contadorInimigos = 0;
-    sprintf(level_N_aux,"%d",levelNumber);
-    strcat(level_N_aux,".txt");
-    strcat(levelName,level_N_aux);
     puts(levelName);
     //teste !!!!!!!!
     FILE* mapaLevel = fopen(levelName,"r");
@@ -277,12 +275,14 @@ int main()
 {
     InitWindow(900,750, "trabalho");
     SetTargetFPS(30);
-    int iMapRender,jMapRender;
     texturaTitle = LoadTexture("TitleScreen.png");
     fonteTitle = LoadFontEx("SunnyspellsRegular-MV9ze.otf",60,NULL,0);
+    sapo=LoadTexture("sapo.png");
     //CarregaMapa(1,CurrentLevelMatrix,&jogador,Inimigos,&InimigosNaFase);
     printf("%d",status_jogo_atual.InimigosNaFase);
     printf(" \n %d",tamanhotitle);
+    time_t tempo_inicio =time(NULL);
+    int tempoAtual;
 
     while(!WindowShouldClose())
     {
@@ -296,10 +296,14 @@ int main()
          }
          Menu(1);
 
-
         BeginDrawing();
         ClearBackground(WHITE);
+        tempoAtual = time(NULL)-tempo_inicio;
         JogoRenderer(&status_jogo_atual);
+        DrawText(TextFormat("Tempo:%d s",tempoAtual),450,450,50,BLACK);
+        DrawText(TextFormat("Vida:%d",status_jogo_atual.player.HP),450,550,50,BLACK);
+        DrawText(TextFormat("Bombas:%d",status_jogo_atual.player.bombAmount),450,500,50,BLACK);
+
         EndDrawing();
 
 
