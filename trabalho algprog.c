@@ -26,6 +26,7 @@ typedef struct Inimigo_t
 {
     Vector2 posInimigo;//Vector2 eh um struct com float x e y, util para armazenar posicao
     Vector2 dirInimigo;
+    Rectangle inimigoRec;
     int tipoInimigo;
     int HP;
     bool ativo;
@@ -37,6 +38,7 @@ typedef struct Player_t
 {
     Vector2 posplayer;
     Vector2 dirPlayer;
+    Rectangle playerRec;
     int HP ;
     int dmg;
     int bombAmount;
@@ -355,7 +357,9 @@ void PausaRenderer()
 /* A funcao JogoRenderer desenha os elementos do jogo na tela */
 void JogoRenderer(STATUS *s)
 {
-    DrawRectangleV(s->player.posplayer,(Vector2){30,30},GREEN);
+    s->player.playerRec = (Rectangle){.x=s->player.posplayer.x,.y=s->player.posplayer.y,.width=30,.height=30};
+    DrawRectangleRec(s->player.playerRec,GREEN);
+    //DrawRectangleV(s->player.posplayer,(Vector2){30,30},GREEN);
     DrawTextureEx(sapo,s->player.posplayer,0,1,WHITE);
     for(int i=0; i<MAPLINES; i++)
     {
@@ -370,7 +374,9 @@ void JogoRenderer(STATUS *s)
     DrawRectangle(0,450,900,300,RED);
     for(int k=0; k<s->InimigosNaFase; k++)
     {
-        DrawRectangleV(s->Inimigos[k].posInimigo,(Vector2){30,30},RED);
+        s->Inimigos[k].inimigoRec = (Rectangle){.x=s->Inimigos[k].posInimigo.x,.y=s->Inimigos[k].posInimigo.y,.width=30,.height=30};
+        //DrawRectangleV(s->Inimigos[k].posInimigo,(Vector2){30,30},RED);
+        DrawRectangleRec(s->Inimigos[k].inimigoRec,RED);
     }
 
 
@@ -407,7 +413,10 @@ void CarregaJogo(STATUS *s)
     tempo_atual=s->tempo_restante;
 
 }
-
+void CollisionHandler(STATUS *s)
+{
+    //CheckCollisionRecs()
+}
 
 /* A funcao Menu recebe um int type, 0 para o menu principal e 1 para o menu dentro do jogo, limitando as opcoes dependendo do contexto.
 Dependendo da tecla apertada realiza outras funcoes de manipulacao do estado do jogo */
