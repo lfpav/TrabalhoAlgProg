@@ -27,6 +27,9 @@ typedef struct Inimigo_t
     Vector2 posInimigo;//Vector2 eh um struct com float x e y, util para armazenar posicao
     Vector2 dirInimigo;
     Rectangle inimigoRec;
+    Color spriteColor;
+    float flash_Duration;
+    bool TomouDano;
     int tipoInimigo;
     int HP;
     bool ativo;
@@ -39,6 +42,9 @@ typedef struct Player_t
     Vector2 posplayer;
     Vector2 dirPlayer;
     Rectangle playerRec;
+    Color spriteColor;
+    float flash_Duration;
+    bool TomouDano;
     int HP ;
     int dmg;
     int bombAmount;
@@ -80,6 +86,8 @@ time_t tempo_inicio;
 float tempo_atual;
 float tempo_pausado;
 bool Pausado = false;
+float flash_Duration = 0.5;
+bool TomouDano = false;
 void ArmazenaPosicoes(STATUS *s)
 {
     int posiMatrix,posjMatrix;
@@ -278,8 +286,6 @@ int moveInimigo(INIMIGO *Inim_ptr,int *moveDuration)
 }
 
 
-
-
 /* CarregaMapa recebe o numero da fase desejada e o tipo de carregamento carrega o arquivo correspondente ao nivel desejado.
 Caso seja tipo 0, a funcao carrega o mapa normalmente.
 Caso seja tipo 1, a funcao carrega o mapa baseado no arquivo JogoSalvo.txt
@@ -399,7 +405,20 @@ void JogoRenderer(STATUS *s)
     s->player.playerRec = (Rectangle){.x=s->player.posplayer.x,.y=s->player.posplayer.y,.width=30,.height=30};
     DrawRectangleRec(s->player.playerRec,GREEN);
     //DrawRectangleV(s->player.posplayer,(Vector2){30,30},GREEN);
-    DrawTextureEx(sapo,s->player.posplayer,0,1,WHITE);
+    if(s->player.TomouDano)
+    {
+        s->player.flash_Duration-=GetFrameTime();
+        s->player.spriteColor = RED;
+
+        if(s->player.flash_Duration<=0)
+        {
+            s->player.TomouDano = false;
+            s->player.spriteColor=WHITE;
+            s->player.flash_Duration=0.3;
+        }
+
+    }
+    DrawTextureEx(sapo,(Vector2){s->player.posplayer.x-15,s->player.posplayer.y-15},0,1,s->player.spriteColor);
     for(int i=0; i<MAPLINES; i++)
     {
         for(int j=0; j<MAPCOLUMNS; j++)
@@ -413,9 +432,19 @@ void JogoRenderer(STATUS *s)
     DrawRectangle(0,450,900,300,RED);
     for(int k=0; k<s->InimigosNaFase; k++)
     {
+        if(s->Inimigos[k].TomouDano)
+        {
+            s->Inimigos[k].flash_Duration-=GetFrameTime();
+            s->Inimigos[k].spriteColor= RED;
+            if(s->Inimigos[k].flash_Duration<=0)
+            {
+                s->Inimigos[k].TomouDano=false;
+                s->Inimigos[k].spriteColor=WHITE;
+                s->Inimigos[k].flash_Duration=0.3;
+            }
+        }
         s->Inimigos[k].inimigoRec = (Rectangle){.x=s->Inimigos[k].posInimigo.x,.y=s->Inimigos[k].posInimigo.y,.width=30,.height=30};
-        //DrawRectangleV(s->Inimigos[k].posInimigo,(Vector2){30,30},RED);
-        DrawRectangleRec(s->Inimigos[k].inimigoRec,RED);
+        DrawRectangleRec(s->Inimigos[k].inimigoRec,s->Inimigos[k].spriteColor);
     }
 
 
@@ -452,6 +481,18 @@ void CarregaJogo(STATUS *s)
     tempo_atual=s->tempo_restante;
 
 }
+void TakeDmg(PLAYER *p)
+{
+    p->HP-=1;
+    p->TomouDano=true;
+
+
+}
+void TakeDmgEnemy(INIMIGO *inim)
+{
+    inim->HP-=1;
+    inim->TomouDano=true;
+}
 void CollisionHandler(STATUS *s,int *invulnTime)
 {
     for(int collisionI=0;collisionI<s->InimigosNaFase;collisionI++)
@@ -460,7 +501,7 @@ void CollisionHandler(STATUS *s,int *invulnTime)
          {
              if(*invulnTime==0)
              {
-                 s->player.HP-=1;
+                 TakeDmg(&s->player);
                 *invulnTime=30;
              }
 
@@ -574,8 +615,16 @@ int main()
     sapo=LoadTexture("sapo.png");
     int moveDuration =0,invulnTime=0;
     SetExitKey(KEY_Q);
+    status_jogo_atual.player.TomouDano=false;
+    status_jogo_atual.player.spriteColor=WHITE;
+    status_jogo_atual.player.flash_Duration=0.3;
+    for(int i =0;i<MAX_INIMIGOS;i++)
+     {
+         status_jogo_atual.Inimigos[i].spriteColor=PURPLE;
+         status_jogo_atual.Inimigos[i].TomouDano=false;
+         status_jogo_atual.Inimigos[i].flash_Duration=0.3;
 
-
+     }
     while(!WindowShouldClose())
     {
         while(!GameStart)
