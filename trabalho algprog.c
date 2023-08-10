@@ -106,7 +106,7 @@ void SalvaJogo(STATUS *s)
 
         }
     }
-    fprintf(savegame,"%d\n%d\n%f\n%d",s->player.HP,s->player.bombAmount,tempo_atual,s->mapaAtual);
+    fprintf(savegame,"%d\n%d\n%d\n%.1f",s->player.HP,s->player.bombAmount,s->mapaAtual,tempo_atual);
     fclose(savegame);
 
 }
@@ -317,7 +317,8 @@ void CarregaMapa(STATUS *s,int type)
     }
     if(type==1)
     {
-        fscanf(mapaLevel,"%d\n%d\n%d\n%f\n%d",&s->player.HP,&s->player.bombAmount,&s->tempo_restante,&s->mapaAtual);
+        fscanf(mapaLevel,"%d\n%d\n%d\n%f",&s->player.HP,&s->player.bombAmount,&s->mapaAtual,&s->tempo_restante);
+        printf("%.1f",s->tempo_restante);
 
     }
     //printf("%f", player->posplayer.x);
@@ -426,6 +427,7 @@ int main()
             Mover(&status_jogo_atual.player);
             moveInimigo(&status_jogo_atual.Inimigos[0],&moveDuration);
             tempo_atual+=GetFrameTime();
+
         }
 
         if(Pausado)
