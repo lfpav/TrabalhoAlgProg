@@ -36,6 +36,7 @@ typedef struct Inimigo_t
 typedef struct Player_t
 {
     Vector2 posplayer;
+    Vector2 dirPlayer;
     int HP ;
     int dmg;
     int bombAmount;
@@ -63,6 +64,9 @@ bool GameStart = false;
 Texture2D sapo;
 time_t tempo_inicio;
 int tempo_atual;
+int tempo_pausado;
+int tempo_inicio_pausa;
+bool Pausado = false;
 void ArmazenaPosicoes(STATUS *s)
 {
     int posiMatrix,posjMatrix;
@@ -114,13 +118,61 @@ void SalvaJogo(STATUS *s)
 
 
 
-void PausaJogo()
+void JogoPausado()
 {
     //tecla esc
 
 }
 void DespausaJogo()
 {
+
+}
+
+int PodeMoverInimigo()
+{
+
+}
+int PlayerMovementHandler(PLAYER *p)
+{
+    p->dirPlayer=(Vector2){0,0};
+
+    if(IsKeyDown(KEY_W))
+    {
+      p->dirPlayer.y=-1;
+    }
+    if(IsKeyDown(KEY_A))
+    {
+      p->dirPlayer.x=-1;
+
+    }
+    if(IsKeyDown(KEY_D))
+    {
+      p->dirPlayer.x=1;
+    }
+    if(IsKeyDown(KEY_S))
+    {
+      p->dirPlayer.y=1;
+
+    }
+    if(p->dirPlayer.x!=0 || p->dirPlayer.y!=0)
+    {
+        return 1;
+    }
+    return 0;
+}
+void Mover(PLAYER *p)
+{
+    if(PlayerMovementHandler(p))
+    {
+        Vector2 newPos;
+        newPos = p->dirPlayer;
+        newPos = Vector2Add(newPos,p->posplayer);
+        if(PodeMover(&newPos))
+        {
+            p->posplayer.x+=p->dirPlayer.x*5;
+            p->posplayer.y+=p->dirPlayer.y*5;
+        }
+    }
 
 }
 int PodeMover(Vector2 *dir)
@@ -130,14 +182,6 @@ int PodeMover(Vector2 *dir)
     else
     return 1;
 
-
-}
-int PodeMoverInimigo()
-{
-
-}
-void Mover()
-{
 
 }
 void gerarDirecaoAleatoria(Vector2 *dir)
@@ -185,7 +229,7 @@ int moveInimigo(INIMIGO *Inim_ptr,int *moveDuration)
 void JogoRenderer(STATUS *s)
 {
     DrawRectangleV(s->player.posplayer,(Vector2){30,30},GREEN);
-    DrawTextureEx(sapo,Vector2Scale(s->player.posplayer,3),0,1,WHITE);
+    DrawTextureEx(sapo,s->player.posplayer,0,1,WHITE);
     for(int i=0; i<MAPLINES; i++)
     {
         for(int j=0; j<MAPCOLUMNS; j++)
@@ -203,6 +247,11 @@ void JogoRenderer(STATUS *s)
     }
     //DrawTextEx()
 
+}
+void PausaRenderer()
+{
+    ClearBackground(GRAY);
+    DrawText("PAUSED",300,200,50,BLACK);
 }
 /* CarregaMapa recebe o numero da fase desejada e o tipo de carregamento carrega o arquivo correspondente ao nivel desejado.
 Caso seja tipo 0, a funcao carrega o mapa normalmente.
@@ -312,6 +361,7 @@ void Menu(int type)
     if(IsKeyPressed(KEY_S)&&type==1)
     {
         SalvaJogo(&status_jogo_atual);
+
     }
     if(IsKeyPressed(KEY_Q))
     {
@@ -349,6 +399,7 @@ int main()
     sapo=LoadTexture("sapo.png");
     printf("%d",status_jogo_atual.InimigosNaFase);
     int moveDuration =0;
+    SetExitKey(KEY_Q);
 
 
     while(!WindowShouldClose())
@@ -362,19 +413,40 @@ int main()
             EndDrawing();
 
         }
+        if(IsKeyPressed(KEY_ESCAPE))
+        {
+            Pausado = !Pausado;
+            tempo_inicio_pausa = time(NULL);
+
+        }
+        if(!Pausado)
+        {
+            Mover(&status_jogo_atual.player);
+            moveInimigo(&status_jogo_atual.Inimigos[0],&moveDuration);
+            tempo_atual = time(NULL)-tempo_inicio+status_jogo_atual.tempo_restante-tempo_pausado;
+        }
+
+        if(Pausado)
+        {
+        tempo_pausado = time(NULL)-tempo_inicio_pausa;
         Menu(1);
+        }
+
+
+
 
         BeginDrawing();
         ClearBackground(WHITE);
-        tempo_atual = time(NULL)-tempo_inicio+status_jogo_atual.tempo_restante;
         JogoRenderer(&status_jogo_atual);
-        moveInimigo(&status_jogo_atual.Inimigos[0],&moveDuration);
+        if(Pausado)
+        {
+            PausaRenderer();
+        }
         DrawText(TextFormat("Tempo:%d s",tempo_atual),0,500,50,BLACK);
         DrawText(TextFormat("Vida:%d",status_jogo_atual.player.HP),0,550,50,BLACK);
         DrawText(TextFormat("Bombas:%d",status_jogo_atual.player.bombAmount),0,600,50,BLACK);
         DrawText(TextFormat("Mapa atual:%d",status_jogo_atual.mapaAtual),0,450,50,BLACK);
         DrawText(TextFormat("Inimigos:%d",status_jogo_atual.InimigosNaFase),0,700,50,BLACK);
-
 
         EndDrawing();
 
