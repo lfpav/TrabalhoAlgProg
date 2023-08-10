@@ -66,6 +66,7 @@ Sound unpauseSound;
 Sound titleTheme;
 Font fonteTitle;
 int invincibilityTime=10;
+float tempo_i_chase =0;
 float sizeMulti[4]={1,1,1,1};
 Rectangle RetangulosTitle[3] = {(Rectangle){.x=225,.y=450,.width=360,.height=60},(Rectangle){.x=225,.y=550,.width=450,.height=60},{.x=225,.y=650,.width=200,.height=60}};
 Rectangle RetangulosPausa[4] = {(Rectangle){.x=310,.y=200,.width=200,.height=40},(Rectangle){.x=290,.y=250,.width=250,.height=40},{.x=350,.y=300,.width=300,.height=40},{.x=290,.y=350,.width=300,.height=40}};
@@ -130,6 +131,7 @@ void SalvaJogo(STATUS *s)
 
 
 
+
 void JogoPausado()
 {
     //tecla esc
@@ -154,6 +156,42 @@ int PodeMover(Vector2 *dir)
 
 
 }
+void inimigoPerseguePlayer(INIMIGO *Inim_ptr, PLAYER *p)
+ {
+     Vector2 newPos;
+     Vector2 not_Norm,Norm,atualDir;
+     tempo_i_chase += GetFrameTime();
+     if(tempo_i_chase>0.1)
+     {
+         not_Norm = Vector2Subtract(p->posplayer,Inim_ptr->posInimigo);
+         Norm = Vector2Normalize(not_Norm);
+         atualDir.x = Inim_ptr->dirInimigo.x;
+         atualDir.y = Inim_ptr->dirInimigo.y;
+         if(fabs(not_Norm.x)>30 )
+         {
+            Inim_ptr->dirInimigo.x = Norm.x;
+         }
+
+            if(fabs(not_Norm.y)>30)
+         {
+
+             Inim_ptr->dirInimigo.y = Norm.y;
+         }
+
+        tempo_i_chase=0;
+     }
+
+     newPos = Inim_ptr->dirInimigo;
+     newPos = Vector2Add(newPos,Inim_ptr->posInimigo);
+
+     if(PodeMover(&newPos))
+    {
+        Inim_ptr->posInimigo.x+=Inim_ptr->dirInimigo.x*2;
+        Inim_ptr->posInimigo.y+=Inim_ptr->dirInimigo.y*2;
+    }
+ }
+
+
 int PlayerMovementHandler(PLAYER *p)
 {
     p->dirPlayer=(Vector2){0,0};
@@ -191,8 +229,8 @@ void Mover(PLAYER *p)
         newPos = Vector2Add(newPos,p->posplayer);
         if(PodeMover(&newPos))
         {
-            p->posplayer.x+=p->dirPlayer.x*2.5;
-            p->posplayer.y+=p->dirPlayer.y*2.5;
+            p->posplayer.x+=p->dirPlayer.x*3;
+            p->posplayer.y+=p->dirPlayer.y*3;
         }
     }
 
@@ -428,7 +466,6 @@ void CollisionHandler(STATUS *s,int *invulnTime)
 
          }
 
-
     }
     if(*invulnTime>0)
      *invulnTime-=1;
@@ -573,6 +610,7 @@ int main()
         {
             Mover(&status_jogo_atual.player);
             moveInimigo(&status_jogo_atual.Inimigos[0],&moveDuration);
+            inimigoPerseguePlayer(&status_jogo_atual.Inimigos[1],&status_jogo_atual.player);
             CollisionHandler(&status_jogo_atual,&invulnTime);
             tempo_atual+=GetFrameTime();
 
