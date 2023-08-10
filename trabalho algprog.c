@@ -51,7 +51,7 @@ typedef struct Status_Jogo_t
     OBJETO_ESTATICO Bombas[MAX_OBJECTS];
     OBJETO_ESTATICO Armadilhas[MAX_OBJECTS];
     OBJETO_ESTATICO Portal;
-    int tempo_restante;
+    float tempo_restante;
     int mapaAtual;
     int InimigosNaFase;
 
@@ -63,9 +63,8 @@ Font fonteTitle;
 bool GameStart = false;
 Texture2D sapo;
 time_t tempo_inicio;
-int tempo_atual;
-int tempo_pausado;
-int tempo_inicio_pausa;
+float tempo_atual;
+float tempo_pausado;
 bool Pausado = false;
 void ArmazenaPosicoes(STATUS *s)
 {
@@ -107,7 +106,7 @@ void SalvaJogo(STATUS *s)
 
         }
     }
-    fprintf(savegame,"%d\n%d\n%d\n%d",s->player.HP,s->player.bombAmount,tempo_atual,s->mapaAtual);
+    fprintf(savegame,"%d\n%d\n%f\n%d",s->player.HP,s->player.bombAmount,tempo_atual,s->mapaAtual);
     fclose(savegame);
 
 }
@@ -130,6 +129,16 @@ void DespausaJogo()
 
 int PodeMoverInimigo()
 {
+
+}
+int PodeMover(Vector2 *dir)
+{
+
+    if(dir->x<30||dir->x>840||dir->y<30||dir->y>390)
+    return 0;
+    else
+    return 1;
+
 
 }
 int PlayerMovementHandler(PLAYER *p)
@@ -175,15 +184,7 @@ void Mover(PLAYER *p)
     }
 
 }
-int PodeMover(Vector2 *dir)
-{
-    if(dir->x<30||dir->x>=840||dir->y<30||dir->y>390)
-    return 0;
-    else
-    return 1;
 
-
-}
 void gerarDirecaoAleatoria(Vector2 *dir)
 {
     int dx,dy;
@@ -248,6 +249,7 @@ void JogoRenderer(STATUS *s)
     //DrawTextEx()
 
 }
+
 void PausaRenderer()
 {
     ClearBackground(GRAY);
@@ -315,7 +317,7 @@ void CarregaMapa(STATUS *s,int type)
     }
     if(type==1)
     {
-        fscanf(mapaLevel,"%d\n%d\n%d\n%d\n%d",&s->player.HP,&s->player.bombAmount,&s->tempo_restante,&s->mapaAtual);
+        fscanf(mapaLevel,"%d\n%d\n%d\n%f\n%d",&s->player.HP,&s->player.bombAmount,&s->tempo_restante,&s->mapaAtual);
 
     }
     //printf("%f", player->posplayer.x);
@@ -337,6 +339,7 @@ void NovoJogo(STATUS *s)
     CarregaMapa(s,0);
     GameStart = true;
     s->tempo_restante=0;
+    tempo_atual=s->tempo_restante;
 
 
 }
@@ -345,7 +348,7 @@ void CarregaJogo(STATUS *s)
 {
     CarregaMapa(s,1);
     GameStart = true;
-    tempo_inicio = time(NULL);
+    tempo_atual=s->tempo_restante;
 
 }
 
@@ -416,19 +419,17 @@ int main()
         if(IsKeyPressed(KEY_ESCAPE))
         {
             Pausado = !Pausado;
-            tempo_inicio_pausa = time(NULL);
 
         }
         if(!Pausado)
         {
             Mover(&status_jogo_atual.player);
             moveInimigo(&status_jogo_atual.Inimigos[0],&moveDuration);
-            tempo_atual = time(NULL)-tempo_inicio+status_jogo_atual.tempo_restante-tempo_pausado;
+            tempo_atual+=GetFrameTime();
         }
 
         if(Pausado)
         {
-        tempo_pausado = time(NULL)-tempo_inicio_pausa;
         Menu(1);
         }
 
@@ -442,7 +443,7 @@ int main()
         {
             PausaRenderer();
         }
-        DrawText(TextFormat("Tempo:%d s",tempo_atual),0,500,50,BLACK);
+        DrawText(TextFormat("Tempo:%.1f s",tempo_atual),0,500,50,BLACK);
         DrawText(TextFormat("Vida:%d",status_jogo_atual.player.HP),0,550,50,BLACK);
         DrawText(TextFormat("Bombas:%d",status_jogo_atual.player.bombAmount),0,600,50,BLACK);
         DrawText(TextFormat("Mapa atual:%d",status_jogo_atual.mapaAtual),0,450,50,BLACK);
