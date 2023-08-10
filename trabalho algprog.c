@@ -64,8 +64,9 @@ Sound pauseSound,selectionSound;
 Sound unpauseSound;
 Sound titleTheme;
 Font fonteTitle;
-float sizeMulti[3]={1,1,1};
+float sizeMulti[4]={1,1,1,1};
 Rectangle RetangulosTitle[3] = {(Rectangle){.x=225,.y=450,.width=360,.height=60},(Rectangle){.x=225,.y=550,.width=450,.height=60},{.x=225,.y=650,.width=200,.height=60}};
+Rectangle RetangulosPausa[4] = {(Rectangle){.x=310,.y=200,.width=200,.height=40},(Rectangle){.x=290,.y=250,.width=250,.height=40},{.x=350,.y=300,.width=300,.height=40},{.x=290,.y=350,.width=300,.height=40}};
 /*RetangulosTitle[0]= (Rectangle){.x=225,.y=450,.width=360,.height=60};
 RetangulosTitle[1]= (Rectangle){.x=225,.y=550,.width=450,.height=60};
 RetangulosTitle[2]= (Rectangle){.x=225,.y=650,.width=200,.height=60};
@@ -256,15 +257,22 @@ void JogoRenderer(STATUS *s)
     {
         DrawRectangleV(s->Inimigos[k].posInimigo,(Vector2){30,30},RED);
     }
+
+
     //DrawTextEx()
 
 }
-
-void PausaRenderer()
+void UnpausedRenderer(STATUS *s)
 {
-    ClearBackground(GRAY);
-    DrawText("PAUSED",300,200,50,BLACK);
+    DrawText(TextFormat("Tempo:%.1f s",tempo_atual),0,500,50,BLACK);
+    DrawText(TextFormat("Vida:%d",status_jogo_atual.player.HP),0,550,50,BLACK);
+    DrawText(TextFormat("Bombas:%d",status_jogo_atual.player.bombAmount),0,600,50,BLACK);
+    DrawText(TextFormat("Mapa atual:%d",status_jogo_atual.mapaAtual),0,450,50,BLACK);
+    DrawText(TextFormat("Inimigos:%d",status_jogo_atual.InimigosNaFase),0,700,50,BLACK);
+
 }
+
+
 /* CarregaMapa recebe o numero da fase desejada e o tipo de carregamento carrega o arquivo correspondente ao nivel desejado.
 Caso seja tipo 0, a funcao carrega o mapa normalmente.
 Caso seja tipo 1, a funcao carrega o mapa baseado no arquivo JogoSalvo.txt
@@ -341,6 +349,43 @@ void CarregaMapa(STATUS *s,int type)
 /* A funcao NovoJogo recebe um struct STATUS, criado ao inicializar o jogo, que armazena as principais informacos sobre o jogo, e confere a ele os valores padrao de um novo jogo,
 tambem coloca a bool GameStart como true, para o jogo sair do menu principal e comecar */
 
+void PausaRenderer()
+{
+    ClearBackground(GRAY);
+    DrawRectangleV((Vector2){200,50},(Vector2){500,630},GREEN);
+    DrawText("PAUSED",350,100,50,BLACK);
+    DrawText(TextFormat("Tempo:%.1f s",tempo_atual),0,25,30,BLACK);
+    DrawText(TextFormat("Vida:%d",status_jogo_atual.player.HP),0,75,30,BLACK);
+    DrawText(TextFormat("Bombas:%d",status_jogo_atual.player.bombAmount),0,125,30,BLACK);
+    DrawText(TextFormat("Mapa atual:%d",status_jogo_atual.mapaAtual),0,175,30,BLACK);
+    DrawText(TextFormat("Inimigos:%d",status_jogo_atual.InimigosNaFase),0,225,30,BLACK);
+    DrawText("Novo Jogo - N",310,200,40*sizeMulti[0],BLACK);
+    DrawText("Salvar Jogo - S",290,250,40*sizeMulti[1],BLACK);
+    DrawText("Carregar Jogo - C",270,300,40*sizeMulti[2],BLACK);
+    DrawText("Sair - Q",350,350,40*sizeMulti[3],BLACK);
+      for(int iPausa=0;iPausa<4;iPausa++)
+    {
+        float firstSize = sizeMulti[iPausa];
+        DrawRectangle(RetangulosPausa[iPausa].x,RetangulosPausa[iPausa].y,RetangulosPausa[iPausa].width,RetangulosPausa[iPausa].height,BLANK);
+        if(CheckCollisionPointRec(GetMousePosition(),RetangulosPausa[iPausa]))
+        {
+            sizeMulti[iPausa]=1.25;
+        }
+        else
+        {
+            sizeMulti[iPausa]=1;
+        }
+        if(firstSize-sizeMulti[iPausa]<0)
+        {
+            PlaySound(selectionSound);
+        }
+    }
+
+
+
+
+
+}
 void NovoJogo(STATUS *s)
 {
     s->player.HP = 5;
@@ -370,12 +415,31 @@ void Menu(int type)
 {
     if(IsMouseButtonPressed(0))
     {
+        if(type ==1)
+        {
+        if(sizeMulti[0]!=1)
+        NovoJogo(&status_jogo_atual);
+        if(sizeMulti[1]!=1)
+        SalvaJogo(&status_jogo_atual);
+        if(sizeMulti[2]!=1)
+        CarregaJogo(&status_jogo_atual);
+        if(sizeMulti[3]!=1)
+        CloseWindow();
+
+
+        }
+        else
+        {
         if(sizeMulti[0]!=1)
         NovoJogo(&status_jogo_atual);
         if(sizeMulti[1]!=1)
         CarregaJogo(&status_jogo_atual);
         if(sizeMulti[2]!=1)
         CloseWindow();
+
+        }
+
+
 
     }
     if(IsKeyPressed(KEY_N))
@@ -491,22 +555,22 @@ int main()
         {
         Menu(1);
         }
-
-
-
-
         BeginDrawing();
         ClearBackground(WHITE);
         JogoRenderer(&status_jogo_atual);
-        if(Pausado)
-        {
-            PausaRenderer();
-        }
+        if(!Pausado)UnpausedRenderer(&status_jogo_atual);
+
+/*
         DrawText(TextFormat("Tempo:%.1f s",tempo_atual),0,500,50,BLACK);
         DrawText(TextFormat("Vida:%d",status_jogo_atual.player.HP),0,550,50,BLACK);
         DrawText(TextFormat("Bombas:%d",status_jogo_atual.player.bombAmount),0,600,50,BLACK);
         DrawText(TextFormat("Mapa atual:%d",status_jogo_atual.mapaAtual),0,450,50,BLACK);
         DrawText(TextFormat("Inimigos:%d",status_jogo_atual.InimigosNaFase),0,700,50,BLACK);
+        */
+          if(Pausado)
+        {
+            PausaRenderer();
+        }
 
         EndDrawing();
 
