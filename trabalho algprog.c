@@ -60,7 +60,7 @@ typedef struct Status_Jogo_t
 
 STATUS status_jogo_atual;
 Texture2D texturaTitle;
-Sound pauseSound;
+Sound pauseSound,selectionSound;
 Sound unpauseSound;
 Sound titleTheme;
 Font fonteTitle;
@@ -402,10 +402,9 @@ Novo Jogo, Carregar Jogo ou Sair */
 void TitleScreen()
 {
     DrawTexture(texturaTitle,0,0,WHITE);
-
-
     for(int iTitle=0;iTitle<3;iTitle++)
     {
+        float firstSize = sizeMulti[iTitle];
         DrawRectangle(RetangulosTitle[iTitle].x,RetangulosTitle[iTitle].y,RetangulosTitle[iTitle].width,RetangulosTitle[iTitle].height,BLANK);
         if(CheckCollisionPointRec(GetMousePosition(),RetangulosTitle[iTitle]))
         {
@@ -414,6 +413,10 @@ void TitleScreen()
         else
         {
             sizeMulti[iTitle]=1;
+        }
+        if(firstSize-sizeMulti[iTitle]<0)
+        {
+            PlaySound(selectionSound);
         }
     }
     DrawTextEx(fonteTitle,"Froggers frog frog",(Vector2){202,150},60,0,BLACK);
@@ -436,6 +439,7 @@ int main()
     SetMasterVolume(50);
     titleTheme=LoadSound("./sound/MoFTitle.mp3");
     pauseSound = LoadSound("./sound/pause.mp3");
+    selectionSound=LoadSound("./sound/selection.mp3");
     unpauseSound = LoadSound("./sound/unpause.mp3");
     texturaTitle = LoadTexture("TitleScreen.png");
     SetSoundVolume(titleTheme,0.5); //SOUND VOLUME EH FLOAT ENTRE 0 E 1, SE BOTAR MAIS Q ISSO VAI ESTOURAR TEUS OUVIDO
@@ -508,6 +512,7 @@ int main()
 
 
     }
+    StopSound(titleTheme);
     CloseAudioDevice();
     CloseWindow();
 
