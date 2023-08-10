@@ -65,6 +65,7 @@ Sound pauseSound,selectionSound;
 Sound unpauseSound;
 Sound titleTheme;
 Font fonteTitle;
+int invincibilityTime=10;
 float sizeMulti[4]={1,1,1,1};
 Rectangle RetangulosTitle[3] = {(Rectangle){.x=225,.y=450,.width=360,.height=60},(Rectangle){.x=225,.y=550,.width=450,.height=60},{.x=225,.y=650,.width=200,.height=60}};
 Rectangle RetangulosPausa[4] = {(Rectangle){.x=310,.y=200,.width=200,.height=40},(Rectangle){.x=290,.y=250,.width=250,.height=40},{.x=350,.y=300,.width=300,.height=40},{.x=290,.y=350,.width=300,.height=40}};
@@ -413,9 +414,25 @@ void CarregaJogo(STATUS *s)
     tempo_atual=s->tempo_restante;
 
 }
-void CollisionHandler(STATUS *s)
+void CollisionHandler(STATUS *s,int *invulnTime)
 {
-    //CheckCollisionRecs()
+    for(int collisionI=0;collisionI<s->InimigosNaFase;collisionI++)
+    {
+         if(CheckCollisionRecs(s->player.playerRec,s->Inimigos[collisionI].inimigoRec))
+         {
+             if(*invulnTime==0)
+             {
+                 s->player.HP-=1;
+                *invulnTime=30;
+             }
+
+         }
+
+
+    }
+    if(*invulnTime>0)
+     *invulnTime-=1;
+
 }
 
 /* A funcao Menu recebe um int type, 0 para o menu principal e 1 para o menu dentro do jogo, limitando as opcoes dependendo do contexto.
@@ -518,7 +535,7 @@ int main()
     SetSoundVolume(titleTheme,0.5); //SOUND VOLUME EH FLOAT ENTRE 0 E 1, SE BOTAR MAIS Q ISSO VAI ESTOURAR TEUS OUVIDO
     fonteTitle = LoadFontEx("SunnyspellsRegular-MV9ze.otf",75,NULL,0);
     sapo=LoadTexture("sapo.png");
-    int moveDuration =0;
+    int moveDuration =0,invulnTime=0;
     SetExitKey(KEY_Q);
 
 
@@ -556,6 +573,7 @@ int main()
         {
             Mover(&status_jogo_atual.player);
             moveInimigo(&status_jogo_atual.Inimigos[0],&moveDuration);
+            CollisionHandler(&status_jogo_atual,&invulnTime);
             tempo_atual+=GetFrameTime();
 
         }
