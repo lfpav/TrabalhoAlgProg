@@ -63,13 +63,34 @@ bool GameStart = false;
 Texture2D sapo;
 time_t tempo_inicio;
 int tempo_atual;
+void ArmazenaPosicoes(STATUS *s)
+{
+    int posiMatrix,posjMatrix;
+    posiMatrix=round(s->player.posplayer.y)/15;
+    posjMatrix=round(s->player.posplayer.x)/15;
+    s->CurrentLevelMatrix[posiMatrix][posjMatrix]='J';
+    for(int l=0;l<MAX_INIMIGOS;l++)
+    {
+        if(s->Inimigos[l].ativo)
+        {
+            posiMatrix = round(s->Inimigos[l].posInimigo.y)/15;
+            posjMatrix = round(s->Inimigos[l].posInimigo.x)/15;
+            s->CurrentLevelMatrix[posiMatrix][posjMatrix]='I';
 
+        }
+
+
+    }
+
+
+}
 
 /* A funcao SalvaJogo recebe o ponteiro para o o struct STATUS atual, e armazena as informacoes relevantes em um arquivo com uma estrutura semelhante aos arquivos de mapa,
 mas com informacoes adicionais nas linhas posteriores */
 void SalvaJogo(STATUS *s)
 {
     FILE* savegame;
+    ArmazenaPosicoes(s);
     savegame = fopen("JogoSalvo.txt","w");
     for(int i=0; i<MAPLINES; i++)
     {
@@ -86,6 +107,8 @@ void SalvaJogo(STATUS *s)
     fclose(savegame);
 
 }
+
+
 
 
 
@@ -140,15 +163,13 @@ int moveInimigo(INIMIGO *Inim_ptr,int *moveDuration)
     {
         gerarDirecaoAleatoria(&Inim_ptr->dirInimigo);
         *moveDuration = 10 +rand()%60;
-        newPos = Inim_ptr->dirInimigo;
-        newPos=Vector2Add(newPos,Inim_ptr->posInimigo);
     }
     else
     {
-        newPos = Inim_ptr->dirInimigo;
-        newPos=Vector2Add(newPos,Inim_ptr->posInimigo);
         *moveDuration-=1;
     }
+    newPos = Inim_ptr->dirInimigo;
+    newPos=Vector2Add(newPos,Inim_ptr->posInimigo);
     if(!PodeMover(&newPos))
     *moveDuration=0;
     else
@@ -189,13 +210,12 @@ Caso seja tipo 1, a funcao carrega o mapa baseado no arquivo JogoSalvo.txt
 A funcao usa Textformat junta o numero do level com mapa e .txt para carregar o mapa, substituindo a necessidade de diversas concatenacoes de strings e sprintf
 O arquivo de level precisa comecar com mapa, ter letra minuscula, ter um int depois do mapa e ser um arquivo txt
 Esse arquivo precisa ter MAPLINES linhas e MAPCOLUMNS colunas para a funcao funcionar direito
-A partir do arquivo determina a posicao inicial do jogador, inimigos e outros elementos do mapa, armazenando essas informacoes em uma matriz
-com MAPLINES linhas e MAPCOLUMNS colunas
+A partir do arquivo determina a posicao inicial do jogador, inimigos e outros elementos do mapa.
+Apos obter as informacoes, apaga as posicoes dos atores moveis da matriz, elas serao salvas posteriormente.
 */
 //void CarregaMapa(int levelNumber, char CurrentLevelMatrix[MAPLINES][MAPCOLUMNS],PLAYER *player, INIMIGO Inimigos[],int *InimigosNaFase)
 void CarregaMapa(STATUS *s,int type)
 {
-
     char*levelName = TextFormat("mapa%d.txt",s->mapaAtual);
     int contadorInimigos = 0;
     //teste !!!!!!!!
@@ -216,6 +236,7 @@ void CarregaMapa(STATUS *s,int type)
                 case 'J':
                 s->player.posplayer.x = jMap*15;
                 s->player.posplayer.y = iMap*15;
+                s->CurrentLevelMatrix[iMap][jMap]='\0';
                 break;
                 case 'I':
                 if(s->InimigosNaFase<=MAX_INIMIGOS)
@@ -226,7 +247,9 @@ void CarregaMapa(STATUS *s,int type)
                     s->Inimigos[s->InimigosNaFase].HP = 5;
                     s->Inimigos[s->InimigosNaFase].ativo = true;
                     gerarDirecaoAleatoria(&s->Inimigos[s->InimigosNaFase].dirInimigo);
+                    s->CurrentLevelMatrix[iMap][jMap]='\0';
                     s->InimigosNaFase+=1;
+
                 }
                 break;
                 default:
