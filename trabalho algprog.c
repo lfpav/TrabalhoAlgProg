@@ -31,7 +31,6 @@ typedef struct Inimigo_t
     bool ativo;
 
 
-
 } INIMIGO;
 
 typedef struct Player_t
@@ -189,8 +188,8 @@ void Mover(PLAYER *p)
         newPos = Vector2Add(newPos,p->posplayer);
         if(PodeMover(&newPos))
         {
-            p->posplayer.x+=p->dirPlayer.x*5;
-            p->posplayer.y+=p->dirPlayer.y*5;
+            p->posplayer.x+=p->dirPlayer.x*2.5;
+            p->posplayer.y+=p->dirPlayer.y*2.5;
         }
     }
 
@@ -230,47 +229,14 @@ int moveInimigo(INIMIGO *Inim_ptr,int *moveDuration)
     *moveDuration=0;
     else
     {
-        Inim_ptr->posInimigo.x+=Inim_ptr->dirInimigo.x*2;
-        Inim_ptr->posInimigo.y+=Inim_ptr->dirInimigo.y*2;
+        Inim_ptr->posInimigo.x+=Inim_ptr->dirInimigo.x*1;
+        Inim_ptr->posInimigo.y+=Inim_ptr->dirInimigo.y*1;
     }
     //printf("%.5f %.5f \n",Inim_ptr->dirInimigo.y,newPos.y);
 
 }
 
-/* A funcao JogoRenderer desenha os elementos do jogo na tela */
-void JogoRenderer(STATUS *s)
-{
-    DrawRectangleV(s->player.posplayer,(Vector2){30,30},GREEN);
-    DrawTextureEx(sapo,s->player.posplayer,0,1,WHITE);
-    for(int i=0; i<MAPLINES; i++)
-    {
-        for(int j=0; j<MAPCOLUMNS; j++)
-        {
-            if(s->CurrentLevelMatrix[i][j]=='#')
-            {
-                DrawRectangle(j*15,i*15,15,15,BROWN);
-            }
-        }
-    }
-    DrawRectangle(0,450,900,300,RED);
-    for(int k=0; k<s->InimigosNaFase; k++)
-    {
-        DrawRectangleV(s->Inimigos[k].posInimigo,(Vector2){30,30},RED);
-    }
 
-
-    //DrawTextEx()
-
-}
-void UnpausedRenderer(STATUS *s)
-{
-    DrawText(TextFormat("Tempo:%.1f s",tempo_atual),0,500,50,BLACK);
-    DrawText(TextFormat("Vida:%d",status_jogo_atual.player.HP),0,550,50,BLACK);
-    DrawText(TextFormat("Bombas:%d",status_jogo_atual.player.bombAmount),0,600,50,BLACK);
-    DrawText(TextFormat("Mapa atual:%d",status_jogo_atual.mapaAtual),0,450,50,BLACK);
-    DrawText(TextFormat("Inimigos:%d",status_jogo_atual.InimigosNaFase),0,700,50,BLACK);
-
-}
 
 
 /* CarregaMapa recebe o numero da fase desejada e o tipo de carregamento carrega o arquivo correspondente ao nivel desejado.
@@ -351,7 +317,7 @@ tambem coloca a bool GameStart como true, para o jogo sair do menu principal e c
 
 void PausaRenderer()
 {
-    ClearBackground(GRAY);
+    DrawRectangleV((Vector2){0,0}, (Vector2){900, 750}, CLITERAL(Color){ 0, 0, 0, 128 });
     DrawRectangleV((Vector2){200,50},(Vector2){500,630},GREEN);
     DrawText("PAUSED",350,100,50,BLACK);
     DrawText(TextFormat("Tempo:%.1f s",tempo_atual),0,25,30,BLACK);
@@ -384,6 +350,40 @@ void PausaRenderer()
 
 
 
+
+}
+/* A funcao JogoRenderer desenha os elementos do jogo na tela */
+void JogoRenderer(STATUS *s)
+{
+    DrawRectangleV(s->player.posplayer,(Vector2){30,30},GREEN);
+    DrawTextureEx(sapo,s->player.posplayer,0,1,WHITE);
+    for(int i=0; i<MAPLINES; i++)
+    {
+        for(int j=0; j<MAPCOLUMNS; j++)
+        {
+            if(s->CurrentLevelMatrix[i][j]=='#')
+            {
+                DrawRectangle(j*15,i*15,15,15,BROWN);
+            }
+        }
+    }
+    DrawRectangle(0,450,900,300,RED);
+    for(int k=0; k<s->InimigosNaFase; k++)
+    {
+        DrawRectangleV(s->Inimigos[k].posInimigo,(Vector2){30,30},RED);
+    }
+
+
+    //DrawTextEx()
+
+}
+void UnpausedRenderer(STATUS *s)
+{
+    DrawText(TextFormat("Tempo:%.1f s",tempo_atual),0,500,50,BLACK);
+    DrawText(TextFormat("Vida:%d",status_jogo_atual.player.HP),0,550,50,BLACK);
+    DrawText(TextFormat("Bombas:%d",status_jogo_atual.player.bombAmount),0,600,50,BLACK);
+    DrawText(TextFormat("Mapa atual:%d",status_jogo_atual.mapaAtual),0,450,50,BLACK);
+    DrawText(TextFormat("Inimigos:%d",status_jogo_atual.InimigosNaFase),0,700,50,BLACK);
 
 }
 void NovoJogo(STATUS *s)
@@ -497,7 +497,7 @@ void TitleScreen()
 int main()
 {
     InitWindow(900,750, "trabalho");
-    SetTargetFPS(30);
+    SetTargetFPS(60);
     srand(time(NULL));
     InitAudioDevice();
     SetMasterVolume(50);
@@ -550,7 +550,6 @@ int main()
             tempo_atual+=GetFrameTime();
 
         }
-
         if(Pausado)
         {
         Menu(1);
@@ -573,7 +572,6 @@ int main()
         }
 
         EndDrawing();
-
 
     }
     StopSound(titleTheme);
