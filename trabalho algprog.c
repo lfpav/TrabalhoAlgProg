@@ -64,6 +64,12 @@ Sound pauseSound;
 Sound unpauseSound;
 Sound titleTheme;
 Font fonteTitle;
+float sizeMulti[3]={1,1,1};
+Rectangle RetangulosTitle[3] = {(Rectangle){.x=225,.y=450,.width=360,.height=60},(Rectangle){.x=225,.y=550,.width=450,.height=60},{.x=225,.y=650,.width=200,.height=60}};
+/*RetangulosTitle[0]= (Rectangle){.x=225,.y=450,.width=360,.height=60};
+RetangulosTitle[1]= (Rectangle){.x=225,.y=550,.width=450,.height=60};
+RetangulosTitle[2]= (Rectangle){.x=225,.y=650,.width=200,.height=60};
+*/
 bool GameStart = false;
 Texture2D sapo;
 time_t tempo_inicio;
@@ -362,6 +368,16 @@ void CarregaJogo(STATUS *s)
 Dependendo da tecla apertada realiza outras funcoes de manipulacao do estado do jogo */
 void Menu(int type)
 {
+    if(IsMouseButtonPressed(0))
+    {
+        if(sizeMulti[0]!=1)
+        NovoJogo(&status_jogo_atual);
+        if(sizeMulti[1]!=1)
+        CarregaJogo(&status_jogo_atual);
+        if(sizeMulti[2]!=1)
+        CloseWindow();
+
+    }
     if(IsKeyPressed(KEY_N))
     {
         NovoJogo(&status_jogo_atual);
@@ -386,14 +402,28 @@ Novo Jogo, Carregar Jogo ou Sair */
 void TitleScreen()
 {
     DrawTexture(texturaTitle,0,0,WHITE);
+
+
+    for(int iTitle=0;iTitle<3;iTitle++)
+    {
+        DrawRectangle(RetangulosTitle[iTitle].x,RetangulosTitle[iTitle].y,RetangulosTitle[iTitle].width,RetangulosTitle[iTitle].height,BLANK);
+        if(CheckCollisionPointRec(GetMousePosition(),RetangulosTitle[iTitle]))
+        {
+            sizeMulti[iTitle]=1.25;
+        }
+        else
+        {
+            sizeMulti[iTitle]=1;
+        }
+    }
     DrawTextEx(fonteTitle,"Froggers frog frog",(Vector2){202,150},60,0,BLACK);
     DrawTextEx(fonteTitle,"Froggers frog frog",(Vector2){205,153},60,0,TURQUOISE);
-    DrawTextEx(fonteTitle,"Novo Jogo - N",(Vector2){222,447},60,0,BLACK);
-    DrawTextEx(fonteTitle,"Novo Jogo - N",(Vector2){225,450},60,0,TURQUOISE);
-    DrawTextEx(fonteTitle,"Carregar Jogo - C",(Vector2){222,547},60,0,BLACK);
-    DrawTextEx(fonteTitle,"Carregar Jogo - C",(Vector2){225,550},60,0,TURQUOISE);
-    DrawTextEx(fonteTitle,"Sair - Q",(Vector2){222,647},60,0,BLACK);
-    DrawTextEx(fonteTitle,"Sair - Q",(Vector2){225,650},60,0,TURQUOISE);
+    DrawTextEx(fonteTitle,"Novo Jogo - N",(Vector2){222,447},60*sizeMulti[0],0,BLACK);
+    DrawTextEx(fonteTitle,"Novo Jogo - N",(Vector2){225,450},60*sizeMulti[0],0,TURQUOISE);
+    DrawTextEx(fonteTitle,"Carregar Jogo - C",(Vector2){222,547},60*sizeMulti[1],0,BLACK);
+    DrawTextEx(fonteTitle,"Carregar Jogo - C",(Vector2){225,550},60*sizeMulti[1],0,TURQUOISE);
+    DrawTextEx(fonteTitle,"Sair - Q",(Vector2){222,647},60*sizeMulti[2],0,BLACK);
+    DrawTextEx(fonteTitle,"Sair - Q",(Vector2){225,650},60*sizeMulti[2],0,TURQUOISE);
     Menu(0);
 
 }
@@ -409,7 +439,7 @@ int main()
     unpauseSound = LoadSound("./sound/unpause.mp3");
     texturaTitle = LoadTexture("TitleScreen.png");
     SetSoundVolume(titleTheme,0.5); //SOUND VOLUME EH FLOAT ENTRE 0 E 1, SE BOTAR MAIS Q ISSO VAI ESTOURAR TEUS OUVIDO
-    fonteTitle = LoadFontEx("SunnyspellsRegular-MV9ze.otf",60,NULL,0);
+    fonteTitle = LoadFontEx("SunnyspellsRegular-MV9ze.otf",75,NULL,0);
     sapo=LoadTexture("sapo.png");
     int moveDuration =0;
     SetExitKey(KEY_Q);
