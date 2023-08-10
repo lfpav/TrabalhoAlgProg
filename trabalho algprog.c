@@ -9,6 +9,7 @@
 #define MAX_OBJECTS 999
 #define TURQUOISE (Color){0,159,150,255}
 #include "raymath.h"
+#include <dirent.h>
 #include <time.h>
 /* declaracao de variaveis */
 
@@ -59,6 +60,9 @@ typedef struct Status_Jogo_t
 
 STATUS status_jogo_atual;
 Texture2D texturaTitle;
+Sound pauseSound;
+Sound unpauseSound;
+Sound titleTheme;
 Font fonteTitle;
 bool GameStart = false;
 Texture2D sapo;
@@ -398,10 +402,15 @@ int main()
     InitWindow(900,750, "trabalho");
     SetTargetFPS(30);
     srand(time(NULL));
+    InitAudioDevice();
+    SetMasterVolume(50);
+    titleTheme=LoadSound("./sound/MoFTitle.mp3");
+    pauseSound = LoadSound("./sound/pause.mp3");
+    unpauseSound = LoadSound("./sound/unpause.mp3");
     texturaTitle = LoadTexture("TitleScreen.png");
+    SetSoundVolume(titleTheme,0.5); //SOUND VOLUME EH FLOAT ENTRE 0 E 1, SE BOTAR MAIS Q ISSO VAI ESTOURAR TEUS OUVIDO
     fonteTitle = LoadFontEx("SunnyspellsRegular-MV9ze.otf",60,NULL,0);
     sapo=LoadTexture("sapo.png");
-    printf("%d",status_jogo_atual.InimigosNaFase);
     int moveDuration =0;
     SetExitKey(KEY_Q);
 
@@ -410,6 +419,8 @@ int main()
     {
         while(!GameStart)
         {
+            if(!IsSoundPlaying(titleTheme))
+            PlaySound(titleTheme);
             BeginDrawing();
             ClearBackground(WHITE);
             TitleScreen();
@@ -419,6 +430,18 @@ int main()
         }
         if(IsKeyPressed(KEY_ESCAPE))
         {
+            if(Pausado)
+            {
+                PlaySound(pauseSound);
+                ResumeSound(titleTheme);
+
+            }
+            if(!Pausado)
+            {
+                PlaySound(unpauseSound);
+                PauseSound(titleTheme);
+
+            }
             Pausado = !Pausado;
 
         }
@@ -455,5 +478,8 @@ int main()
 
 
     }
+    CloseAudioDevice();
+    CloseWindow();
+
 
 }
