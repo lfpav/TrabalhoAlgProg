@@ -9,7 +9,6 @@
 #define MAX_OBJECTS 999
 #define TURQUOISE (Color){0,159,150,255}
 #include "raymath.h"
-#include <dirent.h>
 #include <time.h>
 /* declaracao de variaveis */
 
@@ -33,8 +32,6 @@ typedef struct Inimigo_t
     int tipoInimigo;
     int HP;
     bool ativo;
-
-
 } INIMIGO;
 
 typedef struct Player_t
@@ -69,19 +66,15 @@ STATUS status_jogo_atual;
 Texture2D texturaTitle;
 Sound pauseSound,selectionSound;
 Sound unpauseSound;
+Sound dmgSound;
 Sound titleTheme;
 Font fonteTitle;
 int invincibilityTime=10;
 float tempo_i_chase =0;
 float sizeMulti[4]={1,1,1,1};
 Rectangle RetangulosTitle[3] = {(Rectangle){.x=225,.y=450,.width=360,.height=60},(Rectangle){.x=225,.y=550,.width=450,.height=60},{.x=225,.y=650,.width=200,.height=60}};
-Rectangle RetangulosPausa[4] = {(Rectangle){.x=310,.y=200,.width=200,.height=40},(Rectangle){.x=290,.y=250,.width=250,.height=40},{.x=350,.y=300,.width=300,.height=40},{.x=290,.y=350,.width=300,.height=40}};
+Rectangle RetangulosPausa[4] = {(Rectangle){.x=310,.y=200,.width=300,.height=40},(Rectangle){.x=290,.y=250,.width=300,.height=40},{.x=350,.y=300,.width=300,.height=40},{.x=290,.y=350,.width=300,.height=40}};
 Rectangle RetangulosDeath[3] = {(Rectangle){.x=310,.y=200,.width=200,.height=40},{.x=350,.y=250,.width=300,.height=40},{.x=290,.y=300,.width=300,.height=40}};
-
-/*RetangulosTitle[0]= (Rectangle){.x=225,.y=450,.width=360,.height=60};
-RetangulosTitle[1]= (Rectangle){.x=225,.y=550,.width=450,.height=60};
-RetangulosTitle[2]= (Rectangle){.x=225,.y=650,.width=200,.height=60};
-*/
 bool GameStart = false;
 Texture2D sapo;
 time_t tempo_inicio;
@@ -543,6 +536,7 @@ void TakeDmg(PLAYER *p)
 {
     p->HP-=1;
     p->TomouDano=true;
+    PlaySound(dmgSound);
     if(p->HP<=0)
     p->vivo = false;
 
@@ -696,6 +690,7 @@ int main()
     InitAudioDevice();
     SetMasterVolume(50);
     titleTheme=LoadSound("./sound/MoFTitle.mp3");
+    dmgSound=LoadSound("./sound/takedmg.mp3");
     pauseSound = LoadSound("./sound/pause.mp3");
     selectionSound=LoadSound("./sound/selection.mp3");
     unpauseSound = LoadSound("./sound/unpause.mp3");
