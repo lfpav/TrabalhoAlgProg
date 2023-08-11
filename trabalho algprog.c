@@ -156,16 +156,56 @@ int PodeMoverInimigo()
 {
 
 }
-int PodeMover(Vector2 *dir)
+int PodeMoverX(Vector2 dir, Vector2 pos, Vector2 newPos)
 {
+    int posiLow,posj;
+    Rectangle newPosRec = (Rectangle){.x=newPos.x+dir.x,.y=newPos.y+dir.y,.width=30,.height=30};
+   // DrawRectangleRec(newPosRec,ORANGE);
+    posiLow=floor(pos.y/15);
+    posj=dir.x>0?floor((pos.x+30)/15)+1:ceil(pos.x/15)-1;
 
-    if(dir->x<30||dir->x>840||dir->y<30||dir->y>390)
-    return 0;
-    else
+    for(int i=0;i<3;i++)
+    {
+        if(status_jogo_atual.CurrentLevelMatrix[posiLow+i][posj]=='#')
+        {          //  DrawRectangleRec((Rectangle){.x=posj*15,.y=(posiLow+i)*15,.width=15,.height=15},RED);
+
+            if(CheckCollisionRecs(newPosRec,(Rectangle){.x=posj*15,.y=(posiLow+i)*15,.width=15,.height=15}))
+                return 0;
+
+        }
+
+    }
+
     return 1;
 
 
 }
+int PodeMoverY(Vector2 dir, Vector2 pos, Vector2 newPos)
+{
+    int posjLow,posiLow,posj,posi;
+    Rectangle newPosRec = (Rectangle){.x=newPos.x+dir.x,.y=newPos.y+dir.y,.width=30,.height=30};
+//    DrawRectangleRec(newPosRec,ORANGE);
+    posjLow=floor(pos.x/15);
+    posi=dir.y>0?floor((pos.y+30)/15)+1:ceil(pos.y/15)-1;
+    for(int i=0;i<3;i++)
+    {
+        if(status_jogo_atual.CurrentLevelMatrix[posi][posjLow+i]=='#')
+        {
+                           // DrawRectangleRec((Rectangle){.x=(posjLow+1)*15,.y=posi*15,.width=15,.height=15},RED);
+
+            if(CheckCollisionRecs(newPosRec,(Rectangle){.x=(posjLow+1)*15,.y=posi*15,.width=15,.height=15}))
+                return 0;
+
+        }
+
+    }
+
+    return 1;
+
+
+}
+
+
 void inimigoPerseguePlayer(INIMIGO *Inim_ptr, PLAYER *p)
  {
      Vector2 newPos;
@@ -191,14 +231,22 @@ void inimigoPerseguePlayer(INIMIGO *Inim_ptr, PLAYER *p)
         tempo_i_chase=0;
      }
 
-     newPos = Inim_ptr->dirInimigo;
+     newPos.x = Inim_ptr->dirInimigo.x*2;
+     newPos.y = Inim_ptr->dirInimigo.y*2;
+
      newPos = Vector2Add(newPos,Inim_ptr->posInimigo);
 
-     if(PodeMover(&newPos))
+   if(PodeMoverX(Inim_ptr->dirInimigo,Inim_ptr->posInimigo,newPos))
     {
         Inim_ptr->posInimigo.x+=Inim_ptr->dirInimigo.x*2;
-        Inim_ptr->posInimigo.y+=Inim_ptr->dirInimigo.y*2;
+
     }
+     if(PodeMoverY(Inim_ptr->dirInimigo,Inim_ptr->posInimigo,newPos))
+    {
+        Inim_ptr->posInimigo.y+=Inim_ptr->dirInimigo.y*2;
+
+    }
+
  }
 
 
@@ -235,11 +283,16 @@ void Mover(PLAYER *p)
     if(PlayerMovementHandler(p))
     {
         Vector2 newPos;
-        newPos = p->dirPlayer;
+        newPos.x = p->dirPlayer.x*3;
+        newPos.y = p->dirPlayer.y*3;
+
         newPos = Vector2Add(newPos,p->posplayer);
-        if(PodeMover(&newPos))
+        if(PodeMoverX(p->dirPlayer,p->posplayer,newPos))
         {
             p->posplayer.x+=p->dirPlayer.x*3;
+        }
+        if(PodeMoverY(p->dirPlayer,p->posplayer,newPos))
+        {
             p->posplayer.y+=p->dirPlayer.y*3;
         }
     }
@@ -276,11 +329,12 @@ int moveInimigo(INIMIGO *Inim_ptr,int *moveDuration)
     }
     newPos = Inim_ptr->dirInimigo;
     newPos=Vector2Add(newPos,Inim_ptr->posInimigo);
-    if(!PodeMover(&newPos))
+    if(!PodeMoverX(Inim_ptr->dirInimigo,Inim_ptr->posInimigo,newPos)||!PodeMoverY(Inim_ptr->dirInimigo,Inim_ptr->posInimigo,newPos))
     *moveDuration=0;
-    else
-    {
+     else
+    {  if(PodeMoverX(Inim_ptr->dirInimigo,Inim_ptr->posInimigo,newPos))
         Inim_ptr->posInimigo.x+=Inim_ptr->dirInimigo.x*1;
+       if(PodeMoverY(Inim_ptr->dirInimigo,Inim_ptr->posInimigo,newPos))
         Inim_ptr->posInimigo.y+=Inim_ptr->dirInimigo.y*1;
     }
     //printf("%.5f %.5f \n",Inim_ptr->dirInimigo.y,newPos.y);
@@ -492,6 +546,10 @@ void TakeDmg(PLAYER *p)
     if(p->HP<=0)
     p->vivo = false;
 
+
+}
+void CriaProjetil()
+{
 
 }
 void DeathScreenRenderer()
@@ -714,7 +772,6 @@ int main()
         ClearBackground(WHITE);
         JogoRenderer(&status_jogo_atual);
         if(!Pausado)UnpausedRenderer(&status_jogo_atual);
-
 /*
         DrawText(TextFormat("Tempo:%.1f s",tempo_atual),0,500,50,BLACK);
         DrawText(TextFormat("Vida:%d",status_jogo_atual.player.HP),0,550,50,BLACK);
