@@ -44,7 +44,7 @@ typedef struct Player_t
     Rectangle playerRec;
     Color spriteColor;
     float flash_Duration;
-    bool TomouDano;
+    bool TomouDano,vivo;
     int HP ;
     int dmg;
     int bombAmount;
@@ -76,6 +76,8 @@ float tempo_i_chase =0;
 float sizeMulti[4]={1,1,1,1};
 Rectangle RetangulosTitle[3] = {(Rectangle){.x=225,.y=450,.width=360,.height=60},(Rectangle){.x=225,.y=550,.width=450,.height=60},{.x=225,.y=650,.width=200,.height=60}};
 Rectangle RetangulosPausa[4] = {(Rectangle){.x=310,.y=200,.width=200,.height=40},(Rectangle){.x=290,.y=250,.width=250,.height=40},{.x=350,.y=300,.width=300,.height=40},{.x=290,.y=350,.width=300,.height=40}};
+Rectangle RetangulosDeath[3] = {(Rectangle){.x=310,.y=200,.width=200,.height=40},{.x=350,.y=250,.width=300,.height=40},{.x=290,.y=300,.width=300,.height=40}};
+
 /*RetangulosTitle[0]= (Rectangle){.x=225,.y=450,.width=360,.height=60};
 RetangulosTitle[1]= (Rectangle){.x=225,.y=550,.width=450,.height=60};
 RetangulosTitle[2]= (Rectangle){.x=225,.y=650,.width=200,.height=60};
@@ -465,6 +467,7 @@ void NovoJogo(STATUS *s)
     s->player.HP = 5;
     s->player.bombAmount=3;
     s->player.dmg = 1;
+    s->player.vivo=true;
     s->mapaAtual=1;
     CarregaMapa(s,0);
     GameStart = true;
@@ -477,6 +480,7 @@ void NovoJogo(STATUS *s)
 void CarregaJogo(STATUS *s)
 {
     CarregaMapa(s,1);
+    s->player.vivo=true;
     GameStart = true;
     tempo_atual=s->tempo_restante;
 
@@ -485,7 +489,36 @@ void TakeDmg(PLAYER *p)
 {
     p->HP-=1;
     p->TomouDano=true;
+    if(p->HP<=0)
+    p->vivo = false;
 
+
+}
+void DeathScreenRenderer()
+{
+    DrawRectangleV((Vector2){0,0}, (Vector2){900, 750}, CLITERAL(Color){ 0, 0, 0, 128 });
+    DrawRectangleV((Vector2){200,50},(Vector2){500,630},GREEN);
+    DrawText("VOCE MORREU",350,100,50,BLACK);
+    DrawText("Novo Jogo - N",310,200,40*sizeMulti[0],BLACK);
+    DrawText("Carregar Jogo - C",270,250,40*sizeMulti[1],BLACK);
+    DrawText("Sair - Q",350,300,40*sizeMulti[2],BLACK);
+    for(int iDeath=0;iDeath<3;iDeath++)
+    {
+        float firstSize = sizeMulti[iDeath];
+        DrawRectangle(RetangulosDeath[iDeath].x,RetangulosDeath[iDeath].y,RetangulosDeath[iDeath].width,RetangulosDeath[iDeath].height,BLANK);
+        if(CheckCollisionPointRec(GetMousePosition(),RetangulosDeath[iDeath]))
+        {
+            sizeMulti[iDeath]=1.25;
+        }
+        else
+        {
+            sizeMulti[iDeath]=1;
+        }
+        if(firstSize-sizeMulti[iDeath]<0)
+        {
+            PlaySound(selectionSound);
+        }
+    }
 
 }
 void TakeDmgEnemy(INIMIGO *inim)
@@ -529,7 +562,6 @@ void Menu(int type)
         CarregaJogo(&status_jogo_atual);
         if(sizeMulti[3]!=1)
         CloseWindow();
-
 
         }
         else
@@ -618,6 +650,7 @@ int main()
     status_jogo_atual.player.TomouDano=false;
     status_jogo_atual.player.spriteColor=WHITE;
     status_jogo_atual.player.flash_Duration=0.3;
+    status_jogo_atual.player.vivo = true;
     for(int i =0;i<MAX_INIMIGOS;i++)
      {
          status_jogo_atual.Inimigos[i].spriteColor=PURPLE;
@@ -638,36 +671,45 @@ int main()
             EndDrawing();
 
         }
-        if(IsKeyPressed(KEY_ESCAPE))
+        if(status_jogo_atual.player.vivo)
         {
-            if(Pausado)
+            if(IsKeyPressed(KEY_ESCAPE))
             {
-                PlaySound(pauseSound);
-                ResumeSound(titleTheme);
+                if(Pausado)
+                {
+                    PlaySound(pauseSound);
+                    ResumeSound(titleTheme);
+
+                }
+                if(!Pausado)
+                {
+                    PlaySound(unpauseSound);
+                    PauseSound(titleTheme);
+
+                }
+                Pausado = !Pausado;
 
             }
             if(!Pausado)
             {
-                PlaySound(unpauseSound);
-                PauseSound(titleTheme);
+                Mover(&status_jogo_atual.player);
+                moveInimigo(&status_jogo_atual.Inimigos[0],&moveDuration);
+                inimigoPerseguePlayer(&status_jogo_atual.Inimigos[1],&status_jogo_atual.player);
+                CollisionHandler(&status_jogo_atual,&invulnTime);
+                tempo_atual+=GetFrameTime();
 
             }
-            Pausado = !Pausado;
+            if(Pausado)
+            {
+                Menu(1);
+            }
 
         }
-        if(!Pausado)
+        if(status_jogo_atual.player.vivo==false)
         {
-            Mover(&status_jogo_atual.player);
-            moveInimigo(&status_jogo_atual.Inimigos[0],&moveDuration);
-            inimigoPerseguePlayer(&status_jogo_atual.Inimigos[1],&status_jogo_atual.player);
-            CollisionHandler(&status_jogo_atual,&invulnTime);
-            tempo_atual+=GetFrameTime();
+            Menu(0);
+        }
 
-        }
-        if(Pausado)
-        {
-        Menu(1);
-        }
         BeginDrawing();
         ClearBackground(WHITE);
         JogoRenderer(&status_jogo_atual);
@@ -683,6 +725,10 @@ int main()
           if(Pausado)
         {
             PausaRenderer();
+        }
+        if(status_jogo_atual.player.vivo==false)
+        {
+            DeathScreenRenderer();
         }
 
         EndDrawing();
