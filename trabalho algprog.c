@@ -20,6 +20,13 @@ typedef struct Objetos_Estaticos_t
     int tipoObjeto;
     bool ativo;
 } OBJETO_ESTATICO;
+typedef struct Projetil_t
+{
+    Vector2 posProj;
+    Vector2 dirProj;
+    bool ativo;
+
+}PROJETIL;
 
 typedef struct Inimigo_t
 {
@@ -127,28 +134,10 @@ void SalvaJogo(STATUS *s)
     fclose(savegame);
 
 }
-
-
-
-
-
-
-
-
-void JogoPausado()
-{
-    //tecla esc
-
-}
-void DespausaJogo()
-{
-
-}
-
-int PodeMoverInimigo()
-{
-
-}
+/* Verifica se o movimento eh possivel na direcao X atraves da colisao de um retangulo representando a posicao desejada do movimento
+checa os indices em volta da posicao do jogador/inimigo para ver se possuem paredes
+caso possuam, ele checa a colisao entre o retangulo da nova posicao e retangulos nas posicoes das paredes encontradas
+caso haja colisao, retorna 0, n da pra mover */
 int PodeMoverX(Vector2 dir, Vector2 pos, Vector2 newPos)
 {
     int posiLow,posj;
@@ -173,6 +162,10 @@ int PodeMoverX(Vector2 dir, Vector2 pos, Vector2 newPos)
 
 
 }
+/* Verifica se o movimento eh possivel na direcao Y atraves da colisao de um retangulo representando a posicao desejada do movimento
+checa os indices em volta da posicao do jogador/inimigo para ver se possuem paredes
+caso possuam, ele checa a colisao entre o retangulo da nova posicao e retangulos nas posicoes das paredes encontradas
+caso haja colisao, retorna 0, n da pra mover */
 int PodeMoverY(Vector2 dir, Vector2 pos, Vector2 newPos)
 {
     int posjLow,posiLow,posj,posi;
@@ -198,7 +191,7 @@ int PodeMoverY(Vector2 dir, Vector2 pos, Vector2 newPos)
 
 }
 
-
+/* algoritmo de inimigo que persegue o jogador */
 void inimigoPerseguePlayer(INIMIGO *Inim_ptr, PLAYER *p)
  {
      Vector2 newPos;
@@ -242,7 +235,7 @@ void inimigoPerseguePlayer(INIMIGO *Inim_ptr, PLAYER *p)
 
  }
 
-
+/* verifica os inputs para definir a direcao do jogador */
 int PlayerMovementHandler(PLAYER *p)
 {
     p->dirPlayer=(Vector2){0,0};
@@ -271,6 +264,7 @@ int PlayerMovementHandler(PLAYER *p)
     }
     return 0;
 }
+/* caso haja input,ou seja, haja direcao diferente de 0, verifica se o movimento eh possivel e move o jogador */
 void Mover(PLAYER *p)
 {
     if(PlayerMovementHandler(p))
@@ -291,7 +285,7 @@ void Mover(PLAYER *p)
     }
 
 }
-
+/* gera uma direcao aleatoria diagonal */
 void gerarDirecaoAleatoria(Vector2 *dir)
 {
     int dx,dy;
@@ -308,6 +302,7 @@ void gerarDirecaoAleatoria(Vector2 *dir)
     dir->x=dx;
     dir->y=dy;
 }
+/* inimigo que se move aleatoriamente em diagonais */
 int moveInimigo(INIMIGO *Inim_ptr,int *moveDuration)
 {
     Vector2 newPos;
@@ -323,6 +318,10 @@ int moveInimigo(INIMIGO *Inim_ptr,int *moveDuration)
     newPos = Inim_ptr->dirInimigo;
     newPos=Vector2Add(newPos,Inim_ptr->posInimigo);
     if(!PodeMoverX(Inim_ptr->dirInimigo,Inim_ptr->posInimigo,newPos)||!PodeMoverY(Inim_ptr->dirInimigo,Inim_ptr->posInimigo,newPos))
+        *moveDuration=0;
+
+    if(!PodeMoverY(Inim_ptr->dirInimigo,Inim_ptr->posInimigo,newPos)||!PodeMoverY(Inim_ptr->dirInimigo,Inim_ptr->posInimigo,newPos))
+
     *moveDuration=0;
      else
     {  if(PodeMoverX(Inim_ptr->dirInimigo,Inim_ptr->posInimigo,newPos))
@@ -408,9 +407,8 @@ void CarregaMapa(STATUS *s,int type)
 }
 
 
-/* A funcao NovoJogo recebe um struct STATUS, criado ao inicializar o jogo, que armazena as principais informacos sobre o jogo, e confere a ele os valores padrao de um novo jogo,
-tambem coloca a bool GameStart como true, para o jogo sair do menu principal e comecar */
 
+/* renderiza os elementos que devem aparecer quando o jogo esta pausado */
 void PausaRenderer()
 {
     DrawRectangleV((Vector2){0,0}, (Vector2){900, 750}, CLITERAL(Color){ 0, 0, 0, 128 });
@@ -500,6 +498,7 @@ void JogoRenderer(STATUS *s)
     //DrawTextEx()
 
 }
+/* renderiza os elementos que aparecem quando o jogo esta despausado */
 void UnpausedRenderer(STATUS *s)
 {
     DrawText(TextFormat("Tempo:%.1f s",tempo_atual),0,500,50,BLACK);
@@ -509,6 +508,8 @@ void UnpausedRenderer(STATUS *s)
     DrawText(TextFormat("Inimigos:%d",status_jogo_atual.InimigosNaFase),0,700,50,BLACK);
 
 }
+/* A funcao NovoJogo recebe um struct STATUS, criado ao inicializar o jogo, que armazena as principais informacos sobre o jogo, e confere a ele os valores padrao de um novo jogo,
+tambem coloca a bool GameStart como true, para o jogo sair do menu principal e comecar */
 void NovoJogo(STATUS *s)
 {
     s->player.HP = 5;
@@ -532,6 +533,7 @@ void CarregaJogo(STATUS *s)
     tempo_atual=s->tempo_restante;
 
 }
+/* faz o jogador tomar dano, e caso HP menor que 0, mata o jogador */
 void TakeDmg(PLAYER *p)
 {
     p->HP-=1;
@@ -546,6 +548,7 @@ void CriaProjetil()
 {
 
 }
+/* renderiza as informacoes que devem ser mostrada na tela de game over */
 void DeathScreenRenderer()
 {
     DrawRectangleV((Vector2){0,0}, (Vector2){900, 750}, CLITERAL(Color){ 0, 0, 0, 128 });
@@ -573,11 +576,13 @@ void DeathScreenRenderer()
     }
 
 }
+/* faz inimigo tomar dano*/
 void TakeDmgEnemy(INIMIGO *inim)
 {
     inim->HP-=1;
     inim->TomouDano=true;
 }
+/* verifica a colisao entre os inimigos e o jogador, e confere um tempo de invulerabilidade ao jogador apos ser atingido (0.5s a 60 FPS) */
 void CollisionHandler(STATUS *s,int *invulnTime)
 {
     for(int collisionI=0;collisionI<s->InimigosNaFase;collisionI++)
@@ -626,8 +631,6 @@ void Menu(int type)
         CloseWindow();
 
         }
-
-
 
     }
     if(IsKeyPressed(KEY_N))
@@ -695,7 +698,7 @@ int main()
     selectionSound=LoadSound("./sound/selection.mp3");
     unpauseSound = LoadSound("./sound/unpause.mp3");
     texturaTitle = LoadTexture("TitleScreen.png");
-    SetSoundVolume(titleTheme,0.5); //SOUND VOLUME EH FLOAT ENTRE 0 E 1, SE BOTAR MAIS Q ISSO VAI ESTOURAR TEUS OUVIDO
+    SetSoundVolume(titleTheme,0.2); //SOUND VOLUME EH FLOAT ENTRE 0 E 1, SE BOTAR MAIS Q ISSO VAI ESTOURAR TEUS OUVIDO
     fonteTitle = LoadFontEx("SunnyspellsRegular-MV9ze.otf",75,NULL,0);
     sapo=LoadTexture("sapo.png");
     int moveDuration =0,invulnTime=0;
@@ -767,13 +770,6 @@ int main()
         ClearBackground(WHITE);
         JogoRenderer(&status_jogo_atual);
         if(!Pausado)UnpausedRenderer(&status_jogo_atual);
-/*
-        DrawText(TextFormat("Tempo:%.1f s",tempo_atual),0,500,50,BLACK);
-        DrawText(TextFormat("Vida:%d",status_jogo_atual.player.HP),0,550,50,BLACK);
-        DrawText(TextFormat("Bombas:%d",status_jogo_atual.player.bombAmount),0,600,50,BLACK);
-        DrawText(TextFormat("Mapa atual:%d",status_jogo_atual.mapaAtual),0,450,50,BLACK);
-        DrawText(TextFormat("Inimigos:%d",status_jogo_atual.InimigosNaFase),0,700,50,BLACK);
-        */
           if(Pausado)
         {
             PausaRenderer();
