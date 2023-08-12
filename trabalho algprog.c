@@ -7,12 +7,17 @@
 #define MAPCOLUMNS 60
 #define MAX_INIMIGOS 15
 #define MAX_OBJECTS 999
+#define MAX_PROJETEIS 15
 #define TURQUOISE (Color){0,159,150,255}
 #include "raymath.h"
 #include <time.h>
 /* declaracao de variaveis */
 
-
+typedef struct Circle_t
+{
+    Vector2 posCenter;
+    float radius;
+}Circle;
 
 typedef struct Objetos_Estaticos_t
 {
@@ -23,6 +28,8 @@ typedef struct Objetos_Estaticos_t
 typedef struct Projetil_t
 {
     Vector2 posProj;
+    Circle bullet;
+    float airTime;
     Vector2 dirProj;
     bool ativo;
 
@@ -45,13 +52,18 @@ typedef struct Player_t
 {
     Vector2 posplayer;
     Vector2 dirPlayer;
+    Vector2 dirShooting;
     Rectangle playerRec;
     Color spriteColor;
+    float fire_Delay;
     float flash_Duration;
     bool TomouDano,vivo;
     int HP ;
     int dmg;
     int bombAmount;
+    int projetilIndex;
+        PROJETIL playerProj[MAX_PROJETEIS];
+
 
 
 } PLAYER;
@@ -103,12 +115,8 @@ void ArmazenaPosicoes(STATUS *s)
             posiMatrix = round(s->Inimigos[l].posInimigo.y)/15;
             posjMatrix = round(s->Inimigos[l].posInimigo.x)/15;
             s->CurrentLevelMatrix[posiMatrix][posjMatrix]='I';
-
         }
-
-
     }
-
 
 }
 
@@ -236,6 +244,70 @@ void inimigoPerseguePlayer(INIMIGO *Inim_ptr, PLAYER *p)
  }
 
 /* verifica os inputs para definir a direcao do jogador */
+void CriaProjetil(PLAYER *p)
+{
+       //if(p->projetilIndex>=MAX_PROJETEIS;)
+        while(p->playerProj[p->projetilIndex].ativo)
+        {
+            p->projetilIndex+=1;
+            if(p->projetilIndex>MAX_PROJETEIS-1)
+            {
+                p->projetilIndex=0;
+            }
+        }
+        p->playerProj[p->projetilIndex].ativo=true;
+        p->playerProj[p->projetilIndex].bullet.posCenter.x=p->dirShooting.x>0?p->posplayer.x+35:p->dirShooting.x<0?p->posplayer.x-5:p->posplayer.x+15;
+        p->playerProj[p->projetilIndex].bullet.posCenter.y=p->dirShooting.y>0?p->posplayer.y+35:p->dirShooting.y<0?p->posplayer.y-5:p->posplayer.y+15;
+        p->playerProj[p->projetilIndex].dirProj=p->dirShooting;
+
+
+}
+int PlayerAttackHandler(PLAYER *p)
+{
+    p->dirShooting=(Vector2){0,0};
+    p->fire_Delay-=GetFrameTime();
+    if(p->fire_Delay<=0)
+    {
+        if(IsKeyDown(KEY_UP))
+        {
+            p->dirShooting.y=-1;
+            CriaProjetil(p);
+            p->fire_Delay=0.5;
+            return 1;
+        }
+        if(IsKeyDown(KEY_RIGHT))
+        {
+            p->dirShooting.x=1;
+            CriaProjetil(p);
+            p->fire_Delay=0.5;
+
+            return 1;
+
+        }
+        if(IsKeyDown(KEY_DOWN))
+        {
+            p->dirShooting.y=1;
+            CriaProjetil(p);
+            p->fire_Delay=0.5;
+
+
+            return 1;
+
+        }
+        if(IsKeyDown(KEY_LEFT))
+        {
+            p->dirShooting.x=-1;
+            p->fire_Delay=0.5;
+
+            CriaProjetil(p);
+            return 1;
+        }
+    }
+    return 0;
+
+
+
+}
 int PlayerMovementHandler(PLAYER *p)
 {
     p->dirPlayer=(Vector2){0,0};
@@ -318,7 +390,7 @@ int moveInimigo(INIMIGO *Inim_ptr,int *moveDuration)
     newPos = Inim_ptr->dirInimigo;
     newPos=Vector2Add(newPos,Inim_ptr->posInimigo);
     if(!PodeMoverX(Inim_ptr->dirInimigo,Inim_ptr->posInimigo,newPos)||!PodeMoverY(Inim_ptr->dirInimigo,Inim_ptr->posInimigo,newPos))
-        *moveDuration=0;
+    *moveDuration=0;
 
     if(!PodeMoverY(Inim_ptr->dirInimigo,Inim_ptr->posInimigo,newPos)||!PodeMoverY(Inim_ptr->dirInimigo,Inim_ptr->posInimigo,newPos))
 
@@ -442,9 +514,6 @@ void PausaRenderer()
     }
 
 
-
-
-
 }
 /* A funcao JogoRenderer desenha os elementos do jogo na tela */
 void JogoRenderer(STATUS *s)
@@ -517,6 +586,19 @@ void NovoJogo(STATUS *s)
     s->player.dmg = 1;
     s->player.vivo=true;
     s->mapaAtual=1;
+    s->player.projetilIndex=0;
+    s->player.fire_Delay=0;
+
+
+    for(int i=0;i<MAX_PROJETEIS;i++)
+    {
+        s->player.playerProj[i].ativo=false;
+        s->player.playerProj[i].airTime=4;
+        s->player.playerProj[i].bullet=(Circle){.posCenter.x=0,.posCenter.y=0,.radius=10};
+
+
+    }
+
     CarregaMapa(s,0);
     GameStart = true;
     s->tempo_restante=0;
@@ -529,6 +611,16 @@ void CarregaJogo(STATUS *s)
 {
     CarregaMapa(s,1);
     s->player.vivo=true;
+    s->player.projetilIndex=0;
+    s->player.fire_Delay=0;
+
+    for(int i=0;i<MAX_PROJETEIS;i++)
+    {
+        s->player.playerProj[i].ativo=false;
+        s->player.playerProj[i].airTime=4;
+        s->player.playerProj[i].bullet=(Circle){.posCenter.x=0,.posCenter.y=0,.radius=10};
+    }
+
     GameStart = true;
     tempo_atual=s->tempo_restante;
 
@@ -544,9 +636,40 @@ void TakeDmg(PLAYER *p)
 
 
 }
-void CriaProjetil()
-{
 
+void MoveProjeteis(PROJETIL *projetil)
+{
+    projetil->bullet.posCenter.x+=projetil->dirProj.x*3;
+    projetil->bullet.posCenter.y+=projetil->dirProj.y*3;
+
+}
+void LimpadorProjetil(PROJETIL *projetil)
+{
+    projetil->airTime-=GetFrameTime();
+    if(projetil->airTime<=0)
+    {
+        projetil->ativo=false;
+        projetil->airTime=4;
+    }
+
+
+}
+void RenderizaProjeteis(PROJETIL projetil)
+{
+    DrawCircle(projetil.bullet.posCenter.x,projetil.bullet.posCenter.y,projetil.bullet.radius,RED);
+
+}
+void ChecadorProjetil(PROJETIL projeteis[MAX_PROJETEIS])
+{
+    for(int i=0;i<MAX_PROJETEIS;i++)
+    {
+        if(projeteis[i].ativo)
+        {
+            LimpadorProjetil(&projeteis[i]);
+            MoveProjeteis(&projeteis[i]);
+            RenderizaProjeteis(projeteis[i]);
+        }
+    }
 }
 /* renderiza as informacoes que devem ser mostrada na tela de game over */
 void DeathScreenRenderer()
@@ -750,6 +873,8 @@ int main()
             {
                 Mover(&status_jogo_atual.player);
                 moveInimigo(&status_jogo_atual.Inimigos[0],&moveDuration);
+                PlayerAttackHandler(&status_jogo_atual.player);
+                ChecadorProjetil(&status_jogo_atual.player.playerProj);
                 inimigoPerseguePlayer(&status_jogo_atual.Inimigos[1],&status_jogo_atual.player);
                 CollisionHandler(&status_jogo_atual,&invulnTime);
                 tempo_atual+=GetFrameTime();
