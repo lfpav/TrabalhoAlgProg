@@ -62,7 +62,7 @@ typedef struct Player_t
     int dmg;
     int bombAmount;
     int projetilIndex;
-        PROJETIL playerProj[MAX_PROJETEIS];
+    PROJETIL playerProj[MAX_PROJETEIS];
 
 
 
@@ -85,7 +85,7 @@ STATUS status_jogo_atual;
 Texture2D texturaTitle;
 Sound pauseSound,selectionSound;
 Sound unpauseSound;
-Sound dmgSound;
+Sound dmgSound,dmgSoundEnemy,deathSoundEnemy;
 Sound titleTheme;
 Font fonteTitle;
 int invincibilityTime=10;
@@ -546,22 +546,10 @@ void JogoRenderer(STATUS *s)
         }
     }
     DrawRectangle(0,450,900,300,RED);
-    for(int k=0; k<s->InimigosNaFase; k++)
-    {
-        if(s->Inimigos[k].TomouDano)
-        {
-            s->Inimigos[k].flash_Duration-=GetFrameTime();
-            s->Inimigos[k].spriteColor= RED;
-            if(s->Inimigos[k].flash_Duration<=0)
-            {
-                s->Inimigos[k].TomouDano=false;
-                s->Inimigos[k].spriteColor=WHITE;
-                s->Inimigos[k].flash_Duration=0.3;
-            }
-        }
-        s->Inimigos[k].inimigoRec = (Rectangle){.x=s->Inimigos[k].posInimigo.x,.y=s->Inimigos[k].posInimigo.y,.width=30,.height=30};
-        DrawRectangleRec(s->Inimigos[k].inimigoRec,s->Inimigos[k].spriteColor);
-    }
+    //for(int k=0; k<s->InimigosNaFase; k++)
+    //{
+
+    //}
 
 
     //DrawTextEx()
@@ -653,10 +641,44 @@ void LimpadorProjetil(PROJETIL *projetil)
     }
 
 
+
 }
 void RenderizaProjeteis(PROJETIL projetil)
 {
     DrawCircle(projetil.bullet.posCenter.x,projetil.bullet.posCenter.y,projetil.bullet.radius,RED);
+
+}
+
+void TakeDmgEnemy(INIMIGO *inim)
+{
+    inim->HP-=1;
+    PlaySound(dmgSoundEnemy);
+    inim->TomouDano=true;
+    if(inim->HP<=0)
+    {
+        PlaySound(deathSoundEnemy);
+        printf("dead!");
+        inim->ativo=false;
+
+    }
+}
+
+int ColisaoProjeteis_Inimigos(PROJETIL *projetil,INIMIGO inimigos[MAX_INIMIGOS])
+{
+    for(int i=0;i<MAX_INIMIGOS;i++)
+    {
+        if(inimigos[i].ativo)
+        {
+            if(CheckCollisionCircleRec(projetil->bullet.posCenter,projetil->bullet.radius,inimigos[i].inimigoRec))
+            {
+                TakeDmgEnemy(&inimigos[i]);
+                projetil->ativo=false;
+                printf("zunga!");
+                return i;
+            }
+        }
+    }
+    return 0;
 
 }
 void ChecadorProjetil(PROJETIL projeteis[MAX_PROJETEIS])
@@ -668,9 +690,43 @@ void ChecadorProjetil(PROJETIL projeteis[MAX_PROJETEIS])
             LimpadorProjetil(&projeteis[i]);
             MoveProjeteis(&projeteis[i]);
             RenderizaProjeteis(projeteis[i]);
+            ColisaoProjeteis_Inimigos(&projeteis[i],status_jogo_atual.Inimigos);
+
+
+
         }
     }
 }
+void InimigoRenderer(INIMIGO *inim)
+{
+    if(inim->TomouDano)
+        {
+            inim->flash_Duration-=GetFrameTime();
+            inim->spriteColor= RED;
+            if(inim->flash_Duration<=0)
+            {
+                inim->TomouDano=false;
+                inim->spriteColor=PURPLE;
+                inim->flash_Duration=0.3;
+            }
+        }
+        inim->inimigoRec = (Rectangle){.x=inim->posInimigo.x,.y=inim->posInimigo.y,.width=30,.height=30};
+        DrawRectangleRec(inim->inimigoRec,inim->spriteColor);
+
+}
+void ChecadorInimigos(INIMIGO inimigo[MAX_INIMIGOS])
+{
+    for(int i=0;i<MAX_INIMIGOS;i++)
+    {
+        if(inimigo[i].ativo)
+        {
+            InimigoRenderer(&inimigo[i]);
+
+        }
+    }
+}
+
+
 /* renderiza as informacoes que devem ser mostrada na tela de game over */
 void DeathScreenRenderer()
 {
@@ -700,11 +756,7 @@ void DeathScreenRenderer()
 
 }
 /* faz inimigo tomar dano*/
-void TakeDmgEnemy(INIMIGO *inim)
-{
-    inim->HP-=1;
-    inim->TomouDano=true;
-}
+
 /* verifica a colisao entre os inimigos e o jogador, e confere um tempo de invulerabilidade ao jogador apos ser atingido (0.5s a 60 FPS) */
 void CollisionHandler(STATUS *s,int *invulnTime)
 {
@@ -715,11 +767,9 @@ void CollisionHandler(STATUS *s,int *invulnTime)
              if(*invulnTime==0)
              {
                  TakeDmg(&s->player);
-                *invulnTime=30;
+                 *invulnTime=30;
              }
-
          }
-
     }
     if(*invulnTime>0)
      *invulnTime-=1;
@@ -817,11 +867,16 @@ int main()
     SetMasterVolume(50);
     titleTheme=LoadSound("./sound/MoFTitle.mp3");
     dmgSound=LoadSound("./sound/takedmg.mp3");
+    dmgSoundEnemy=LoadSound("./sound/dmgSoundEnemy.mp3");
     pauseSound = LoadSound("./sound/pause.mp3");
+    deathSoundEnemy=LoadSound("./sound/deathSoundEnemy.mp3");
     selectionSound=LoadSound("./sound/selection.mp3");
     unpauseSound = LoadSound("./sound/unpause.mp3");
     texturaTitle = LoadTexture("TitleScreen.png");
-    SetSoundVolume(titleTheme,0.2); //SOUND VOLUME EH FLOAT ENTRE 0 E 1, SE BOTAR MAIS Q ISSO VAI ESTOURAR TEUS OUVIDO
+    SetSoundVolume(deathSoundEnemy,0.8);
+    SetSoundVolume(dmgSoundEnemy,0.8);
+
+    SetSoundVolume(titleTheme,0.15); //SOUND VOLUME EH FLOAT ENTRE 0 E 1, SE BOTAR MAIS Q ISSO VAI ESTOURAR TEUS OUVIDO
     fonteTitle = LoadFontEx("SunnyspellsRegular-MV9ze.otf",75,NULL,0);
     sapo=LoadTexture("sapo.png");
     int moveDuration =0,invulnTime=0;
@@ -875,6 +930,7 @@ int main()
                 moveInimigo(&status_jogo_atual.Inimigos[0],&moveDuration);
                 PlayerAttackHandler(&status_jogo_atual.player);
                 ChecadorProjetil(&status_jogo_atual.player.playerProj);
+                ChecadorInimigos(status_jogo_atual.Inimigos);
                 inimigoPerseguePlayer(&status_jogo_atual.Inimigos[1],&status_jogo_atual.player);
                 CollisionHandler(&status_jogo_atual,&invulnTime);
                 tempo_atual+=GetFrameTime();
