@@ -22,6 +22,8 @@ typedef struct Circle_t
 typedef struct Objetos_Estaticos_t
 {
     Vector2 posObjeto;
+    Rectangle objetoRec;
+    Texture2D spriteObjeto;
     int tipoObjeto;
     bool ativo;
 } OBJETO_ESTATICO;
@@ -78,11 +80,14 @@ typedef struct Status_Jogo_t
     float tempo_restante;
     int mapaAtual;
     int InimigosNaFase;
+    int bombasNaFase;
+    int armadilhasNaFase;
 
 } STATUS;
 
 STATUS status_jogo_atual;
 Texture2D texturaTitle;
+Texture2D spriteBomba;
 Sound pauseSound,selectionSound;
 Sound unpauseSound;
 Sound dmgSound,dmgSoundEnemy,deathSoundEnemy;
@@ -105,15 +110,15 @@ bool TomouDano = false;
 void ArmazenaPosicoes(STATUS *s)
 {
     int posiMatrix,posjMatrix;
-    posiMatrix=round(s->player.posplayer.y)/15;
-    posjMatrix=round(s->player.posplayer.x)/15;
+    posiMatrix=floor(s->player.posplayer.y)/15;
+    posjMatrix=floor(s->player.posplayer.x)/15;
     s->CurrentLevelMatrix[posiMatrix][posjMatrix]='J';
     for(int l=0;l<MAX_INIMIGOS;l++)
     {
         if(s->Inimigos[l].ativo)
         {
-            posiMatrix = round(s->Inimigos[l].posInimigo.y)/15;
-            posjMatrix = round(s->Inimigos[l].posInimigo.x)/15;
+            posiMatrix = floor(s->Inimigos[l].posInimigo.y)/15;
+            posjMatrix = floor(s->Inimigos[l].posInimigo.x)/15;
             s->CurrentLevelMatrix[posiMatrix][posjMatrix]='I';
         }
     }
@@ -152,7 +157,7 @@ int PodeMoverX(Vector2 dir, Vector2 pos, Vector2 newPos)
     Rectangle newPosRec = (Rectangle){.x=newPos.x+dir.x,.y=newPos.y+dir.y,.width=30,.height=30};
    // DrawRectangleRec(newPosRec,ORANGE);
     posiLow=floor(pos.y/15);
-    posj=dir.x>0?floor((pos.x+30)/15)+1:ceil(pos.x/15)-1;
+    posj=dir.x>0?floor((pos.x+30)/15)+1:floor(pos.x/15)-1;
 
     for(int i=0;i<3;i++)
     {
@@ -180,7 +185,7 @@ int PodeMoverY(Vector2 dir, Vector2 pos, Vector2 newPos)
     Rectangle newPosRec = (Rectangle){.x=newPos.x+dir.x,.y=newPos.y+dir.y,.width=30,.height=30};
 //    DrawRectangleRec(newPosRec,ORANGE);
     posjLow=floor(pos.x/15);
-    posi=dir.y>0?floor((pos.y+30)/15)+1:ceil(pos.y/15)-1;
+    posi=dir.y>0?floor((pos.y+30)/15)+1:floor(pos.y/15)-1;
     for(int i=0;i<3;i++)
     {
         if(status_jogo_atual.CurrentLevelMatrix[posi][posjLow+i]=='#')
@@ -381,7 +386,7 @@ int moveInimigo(INIMIGO *Inim_ptr,int *moveDuration)
     if(*moveDuration==0)
     {
         gerarDirecaoAleatoria(&Inim_ptr->dirInimigo);
-        *moveDuration = 10 +rand()%60;
+        *moveDuration = 10 +rand()%100;
     }
     else
     {
@@ -428,6 +433,7 @@ void CarregaMapa(STATUS *s,int type)
         mapaLevel=fopen("JogoSalvo.txt","r");
     }
     s->InimigosNaFase=0;
+    s->bombasNaFase=0;
     for(int iMap=0; iMap<MAPLINES; iMap++)
     {
         for(int jMap=0; jMap<MAPCOLUMNS+1; jMap++)
@@ -454,6 +460,23 @@ void CarregaMapa(STATUS *s,int type)
 
                 }
                 break;
+                case 'B':
+                s->Bombas[s->bombasNaFase].posObjeto.x=jMap*15;
+                s->Bombas[s->bombasNaFase].posObjeto.y=iMap*15;
+                s->Bombas[s->bombasNaFase].spriteObjeto=spriteBomba;
+                s->CurrentLevelMatrix[iMap][jMap]='\0';
+                s->Bombas[s->bombasNaFase].ativo=true;
+                s->bombasNaFase+=1;
+                printf("%d",s->bombasNaFase);
+                break;
+                 case 'X':
+                s->Armadilhas[s->armadilhasNaFase].posObjeto.x=jMap*15;
+                s->Armadilhas[s->armadilhasNaFase].posObjeto.y=iMap*15;
+                s->CurrentLevelMatrix[iMap][jMap]='\0';
+                s->Armadilhas[s->armadilhasNaFase].ativo=true;
+                s->armadilhasNaFase+=1;
+                break;
+
                 default:
                 break;
             }
@@ -739,6 +762,62 @@ void ChecadorInimigos(INIMIGO inimigo[MAX_INIMIGOS])
         }
     }
 }
+void ObjetoRenderer(OBJETO_ESTATICO *objeto)
+{
+    objeto->objetoRec = (Rectangle){.x=objeto->posObjeto.x,.y=objeto->posObjeto.y,.width=30,.height=30};
+    DrawTextureEx(objeto->spriteObjeto,objeto->posObjeto,0,0.5,WHITE);
+}
+void CollisionPlayerBomba(PLAYER *p,OBJETO_ESTATICO *bomba)
+{
+    if(CheckCollisionRecs(p->playerRec,bomba->objetoRec))
+    {
+        p->bombAmount+=1;
+        bomba->ativo=false;
+
+
+    }
+}
+void ChecadorObjeto(OBJETO_ESTATICO objeto[MAX_OBJECTS], int *quant_objetos,int tipo)
+{
+    if(tipo==0) // tipo 0 = bomba
+    {
+        for(int i=0; i<*quant_objetos; i++)
+        {
+
+            if(objeto[i].ativo)
+            {
+                ObjetoRenderer(&objeto[i]);
+                CollisionPlayerBomba(&status_jogo_atual.player,&objeto[i]);
+
+            }
+        }
+
+    }
+   else if(tipo==1) //armadilha
+    {
+        for(int i=0; i<*quant_objetos; i++)
+        {
+            if(objeto[i].ativo)
+            {
+                ObjetoRenderer(&objeto[i]);
+
+            }
+        }
+
+    }
+    else if(tipo==2) //portal
+    {
+        for(int i=0; i<*quant_objetos; i++)
+        {
+            if(objeto[i].ativo)
+            {
+
+            }
+        }
+    }
+
+
+}
 
 
 /* renderiza as informacoes que devem ser mostrada na tela de game over */
@@ -889,9 +968,9 @@ int main()
     selectionSound=LoadSound("./sound/selection.mp3");
     unpauseSound = LoadSound("./sound/unpause.mp3");
     texturaTitle = LoadTexture("TitleScreen.png");
+    spriteBomba=LoadTexture("bomb.png");
     SetSoundVolume(deathSoundEnemy,0.8);
     SetSoundVolume(dmgSoundEnemy,0.8);
-
     SetSoundVolume(titleTheme,0.15); //SOUND VOLUME EH FLOAT ENTRE 0 E 1, SE BOTAR MAIS Q ISSO VAI ESTOURAR TEUS OUVIDO
     fonteTitle = LoadFontEx("SunnyspellsRegular-MV9ze.otf",75,NULL,0);
     sapo=LoadTexture("sapo.png");
@@ -946,6 +1025,7 @@ int main()
                 moveInimigo(&status_jogo_atual.Inimigos[0],&moveDuration);
                 PlayerAttackHandler(&status_jogo_atual.player);
                 ChecadorProjetil(status_jogo_atual.player.playerProj);
+                ChecadorObjeto(status_jogo_atual.Bombas,&status_jogo_atual.bombasNaFase,0);
                 ChecadorInimigos(status_jogo_atual.Inimigos);
                 inimigoPerseguePlayer(&status_jogo_atual.Inimigos[1],&status_jogo_atual.player);
                 //CollisionHandler(&status_jogo_atual,&invulnTime);
