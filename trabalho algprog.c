@@ -88,7 +88,7 @@ Sound unpauseSound;
 Sound dmgSound,dmgSoundEnemy,deathSoundEnemy;
 Sound titleTheme;
 Font fonteTitle;
-int invincibilityTime=10;
+int invulnTime=0;
 float tempo_i_chase =0;
 float sizeMulti[4]={1,1,1,1};
 Rectangle RetangulosTitle[3] = {(Rectangle){.x=225,.y=450,.width=360,.height=60},(Rectangle){.x=225,.y=550,.width=450,.height=60},{.x=225,.y=650,.width=200,.height=60}};
@@ -659,6 +659,7 @@ void TakeDmgEnemy(INIMIGO *inim)
         PlaySound(deathSoundEnemy);
         printf("dead!");
         inim->ativo=false;
+        status_jogo_atual.InimigosNaFase-=1;
 
     }
 }
@@ -697,6 +698,18 @@ void ChecadorProjetil(PROJETIL projeteis[MAX_PROJETEIS])
         }
     }
 }
+void CollisionPlayerEnemy(PLAYER *p, INIMIGO *inim)
+{
+    if(CheckCollisionRecs(p->playerRec,inim->inimigoRec))
+    {
+        if(invulnTime==0)
+        {
+            TakeDmg(p);
+            invulnTime=30;
+        }
+    }
+
+}
 void InimigoRenderer(INIMIGO *inim)
 {
     if(inim->TomouDano)
@@ -721,6 +734,7 @@ void ChecadorInimigos(INIMIGO inimigo[MAX_INIMIGOS])
         if(inimigo[i].ativo)
         {
             InimigoRenderer(&inimigo[i]);
+            CollisionPlayerEnemy(&status_jogo_atual.player,&inimigo[i]);
 
         }
     }
@@ -758,7 +772,8 @@ void DeathScreenRenderer()
 /* faz inimigo tomar dano*/
 
 /* verifica a colisao entre os inimigos e o jogador, e confere um tempo de invulerabilidade ao jogador apos ser atingido (0.5s a 60 FPS) */
-void CollisionHandler(STATUS *s,int *invulnTime)
+
+/*void CollisionHandler(STATUS *s,int *invulnTime)
 {
     for(int collisionI=0;collisionI<s->InimigosNaFase;collisionI++)
     {
@@ -775,6 +790,7 @@ void CollisionHandler(STATUS *s,int *invulnTime)
      *invulnTime-=1;
 
 }
+*/
 
 /* A funcao Menu recebe um int type, 0 para o menu principal e 1 para o menu dentro do jogo, limitando as opcoes dependendo do contexto.
 Dependendo da tecla apertada realiza outras funcoes de manipulacao do estado do jogo */
@@ -879,7 +895,7 @@ int main()
     SetSoundVolume(titleTheme,0.15); //SOUND VOLUME EH FLOAT ENTRE 0 E 1, SE BOTAR MAIS Q ISSO VAI ESTOURAR TEUS OUVIDO
     fonteTitle = LoadFontEx("SunnyspellsRegular-MV9ze.otf",75,NULL,0);
     sapo=LoadTexture("sapo.png");
-    int moveDuration =0,invulnTime=0;
+    int moveDuration =0;
     SetExitKey(KEY_Q);
     status_jogo_atual.player.TomouDano=false;
     status_jogo_atual.player.spriteColor=WHITE;
@@ -929,11 +945,15 @@ int main()
                 Mover(&status_jogo_atual.player);
                 moveInimigo(&status_jogo_atual.Inimigos[0],&moveDuration);
                 PlayerAttackHandler(&status_jogo_atual.player);
-                ChecadorProjetil(&status_jogo_atual.player.playerProj);
+                ChecadorProjetil(status_jogo_atual.player.playerProj);
                 ChecadorInimigos(status_jogo_atual.Inimigos);
                 inimigoPerseguePlayer(&status_jogo_atual.Inimigos[1],&status_jogo_atual.player);
-                CollisionHandler(&status_jogo_atual,&invulnTime);
+                //CollisionHandler(&status_jogo_atual,&invulnTime);
                 tempo_atual+=GetFrameTime();
+                if(invulnTime>0)
+                {
+                    invulnTime-=1;
+                }
 
             }
             if(Pausado)
