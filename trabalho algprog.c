@@ -112,7 +112,7 @@ void ArmazenaPosicoes(STATUS *s)
     int posiMatrix,posjMatrix,checador,coords[2]={};
     posiMatrix=ceil((s->player.posplayer.y)/15);
     posjMatrix=ceil((s->player.posplayer.x)/15);
-    if(s->CurrentLevelMatrix=='\0')
+    if(s->CurrentLevelMatrix[posiMatrix][posjMatrix]=='\0')
     s->CurrentLevelMatrix[posiMatrix][posjMatrix]='J';
     else
     {
