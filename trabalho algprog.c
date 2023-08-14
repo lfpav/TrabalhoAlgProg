@@ -107,81 +107,38 @@ float tempo_pausado;
 bool Pausado = false;
 float flash_Duration = 0.5;
 bool TomouDano = false;
-int ChecaPosMatriz(char Matriz[MAPLINES][MAPCOLUMNS], int i, int j,int coords[2],int offset)
-{
-    //printf("5");
-    if(Matriz[i][j+offset]=='\0')
-    {
-        coords[0]=i;
-        coords[1]=j+offset;
-
-        return 1;
-
-    }
-   else if(Matriz[i][j-offset]=='\0')
-    {
-        coords[0]=i;
-        coords[1]=j-offset;
-        return 1;
-
-    }
-   else if(Matriz[i+offset][j]=='\0')
-    {
-        coords[0]=i+offset;
-        coords[1]=j;
-        return 1;
-
-    }
-   else if(Matriz[i-offset][j]=='\0')
-     {
-       coords[0]=i-offset;
-        coords[1]=j;
-        return 1;;
-
-    }
-   else if(Matriz[i+offset][j+offset]=='\0')
-     {
-        coords[0]=i+offset;
-        coords[1]=j+offset;
-        return 1;
-
-    }
-   else if(Matriz[i+offset][j-offset]=='\0')
-     {
-       coords[0]=i+offset;
-        coords[1]=j-offset;
-        return 1;
-
-    }
-  else  if(Matriz[i-offset][j+offset]=='\0')
-    {
-        coords[0]=i-offset;
-        coords[1]=j+offset;
-        return 1;
-
-    }
-   else if(Matriz[i-offset][j-offset]=='\0')
-    {
-       coords[0]=i-offset;
-       coords[1]=j-offset;
-        return 1;
-
-    }
-    else{
-    printf("failed attempt: %d",offset);
-    return 0;
-
-    }
-
-
-
-}
 void ArmazenaPosicoes(STATUS *s)
 {
     int posiMatrix,posjMatrix,checador,coords[2]={};
     posiMatrix=ceil((s->player.posplayer.y)/15);
     posjMatrix=ceil((s->player.posplayer.x)/15);
+    if(s->CurrentLevelMatrix=='\0')
     s->CurrentLevelMatrix[posiMatrix][posjMatrix]='J';
+    else
+    {
+    for(int i=0; i<MAPLINES; i++)
+        {
+            if(s->CurrentLevelMatrix[i][posjMatrix]=='\0')
+            {
+                s->CurrentLevelMatrix[i][posjMatrix]='J';
+                i=MAPLINES;
+            }
+            else
+            {
+                for(int j=0; j<MAPCOLUMNS; j++)
+                {
+                    if(s->CurrentLevelMatrix[i][j]=='\0')
+                    {
+                        s->CurrentLevelMatrix[i][j]='J';
+                        printf("clear on attempt %d",j);
+                        i=MAPLINES;
+                        j=MAPCOLUMNS;
+                    }
+                }
+            }
+
+        }
+    }
     for(int l=0;l<MAX_INIMIGOS;l++)
     {
         if(s->Inimigos[l].ativo)
@@ -192,22 +149,17 @@ void ArmazenaPosicoes(STATUS *s)
             printf("y:%d x:%d\n",posiMatrix,posjMatrix);
             if(s->CurrentLevelMatrix[posiMatrix][posjMatrix]=='\0')
             {
-                printf("clear");
                 s->CurrentLevelMatrix[posiMatrix][posjMatrix]='I';
-
             }
             else
             {
 
-
-                printf("case 3");
                 for(int i=0; i<MAPLINES; i++)
                 {
                     if(s->CurrentLevelMatrix[i][posjMatrix]=='\0')
                     {
                         s->CurrentLevelMatrix[i][posjMatrix]='I';
                         i=MAPLINES;
-                        printf("clear on attempt 3");
                     }
                     else
                     {
@@ -221,15 +173,9 @@ void ArmazenaPosicoes(STATUS *s)
                                 i=MAPLINES;
                                 j=MAPCOLUMNS;
                             }
-
                         }
-
                     }
-
-
                 }
-
-
 
             }
 
@@ -578,7 +524,6 @@ void CarregaMapa(STATUS *s,int type)
                 s->Bombas[s->bombasNaFase].posObjeto.x=jMap*15;
                 s->Bombas[s->bombasNaFase].posObjeto.y=iMap*15;
                 s->Bombas[s->bombasNaFase].spriteObjeto=spriteBomba;
-                s->CurrentLevelMatrix[iMap][jMap]='\0';
                 s->Bombas[s->bombasNaFase].ativo=true;
                 s->bombasNaFase+=1;
                 printf("%d",s->bombasNaFase);
@@ -586,7 +531,6 @@ void CarregaMapa(STATUS *s,int type)
                  case 'X':
                 s->Armadilhas[s->armadilhasNaFase].posObjeto.x=jMap*15;
                 s->Armadilhas[s->armadilhasNaFase].posObjeto.y=iMap*15;
-                s->CurrentLevelMatrix[iMap][jMap]='\0';
                 s->Armadilhas[s->armadilhasNaFase].ativo=true;
                 s->armadilhasNaFase+=1;
                 break;
@@ -891,6 +835,7 @@ void CollisionPlayerBomba(PLAYER *p,OBJETO_ESTATICO *bomba)
     {
         p->bombAmount+=1;
         bomba->ativo=false;
+        status_jogo_atual.CurrentLevelMatrix[(int)bomba->posObjeto.y/15][(int)bomba->posObjeto.x/15] = '\0';
 
 
     }
