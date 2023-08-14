@@ -88,6 +88,7 @@ typedef struct Status_Jogo_t
 STATUS status_jogo_atual;
 Texture2D texturaTitle;
 Texture2D spriteBomba;
+Texture2D spriteTrap;
 Sound pauseSound,selectionSound;
 Sound unpauseSound;
 Sound dmgSound,dmgSoundEnemy,deathSoundEnemy;
@@ -525,6 +526,7 @@ void CarregaMapa(STATUS *s,int type)
                 s->Bombas[s->bombasNaFase].posObjeto.y=iMap*15;
                 s->Bombas[s->bombasNaFase].spriteObjeto=spriteBomba;
                 s->Bombas[s->bombasNaFase].ativo=true;
+                s->Bombas[s->bombasNaFase].tipoObjeto=0;
                 s->bombasNaFase+=1;
                 printf("%d",s->bombasNaFase);
                 break;
@@ -532,6 +534,8 @@ void CarregaMapa(STATUS *s,int type)
                 s->Armadilhas[s->armadilhasNaFase].posObjeto.x=jMap*15;
                 s->Armadilhas[s->armadilhasNaFase].posObjeto.y=iMap*15;
                 s->Armadilhas[s->armadilhasNaFase].ativo=true;
+                s->Armadilhas[s->armadilhasNaFase].tipoObjeto=1;
+                s->Armadilhas[s->armadilhasNaFase].spriteObjeto=spriteTrap;
                 s->armadilhasNaFase+=1;
                 break;
                  case 'P':
@@ -631,13 +635,6 @@ void JogoRenderer(STATUS *s)
         }
     }
     DrawRectangle(0,450,900,300,RED);
-    //for(int k=0; k<s->InimigosNaFase; k++)
-    //{
-
-    //}
-
-
-    //DrawTextEx()
 
 }
 /* renderiza os elementos que aparecem quando o jogo esta despausado */
@@ -840,6 +837,37 @@ void CollisionPlayerBomba(PLAYER *p,OBJETO_ESTATICO *bomba)
 
     }
 }
+void CollisionPlayerTrap(PLAYER *p, OBJETO_ESTATICO *trap)
+{
+    if(CheckCollisionRecs(p->playerRec,trap->objetoRec))
+    {
+        if(invulnTime==0)
+        {
+            TakeDmg(p);
+            invulnTime=30;
+        }
+
+    }
+}
+void CollisionPlayerPortal(PLAYER *p, OBJETO_ESTATICO *portal)
+{
+    if(CheckCollisionRecs(p->playerRec,portal->objetoRec))
+    {
+        portal->ativo=false;
+        status_jogo_atual.mapaAtual+=1;
+        CarregaMapa(&status_jogo_atual,0);
+    }
+}
+void ChecadorPortal(OBJETO_ESTATICO *portal)
+{
+    if(portal->ativo)
+    {
+        ObjetoRenderer(portal);
+        CollisionPlayerPortal(&status_jogo_atual.player,portal);
+
+    }
+
+}
 void ChecadorObjeto(OBJETO_ESTATICO objeto[MAX_OBJECTS], int *quant_objetos,int tipo)
 {
     if(tipo==0) // tipo 0 = bomba
@@ -863,6 +891,7 @@ void ChecadorObjeto(OBJETO_ESTATICO objeto[MAX_OBJECTS], int *quant_objetos,int 
             if(objeto[i].ativo)
             {
                 ObjetoRenderer(&objeto[i]);
+                CollisionPlayerTrap(&status_jogo_atual.player,&objeto[i]);
 
             }
         }
@@ -881,7 +910,6 @@ void ChecadorObjeto(OBJETO_ESTATICO objeto[MAX_OBJECTS], int *quant_objetos,int 
 
 
 }
-
 
 /* renderiza as informacoes que devem ser mostrada na tela de game over */
 void DeathScreenRenderer()
@@ -911,28 +939,6 @@ void DeathScreenRenderer()
     }
 
 }
-/* faz inimigo tomar dano*/
-
-/* verifica a colisao entre os inimigos e o jogador, e confere um tempo de invulerabilidade ao jogador apos ser atingido (0.5s a 60 FPS) */
-
-/*void CollisionHandler(STATUS *s,int *invulnTime)
-{
-    for(int collisionI=0;collisionI<s->InimigosNaFase;collisionI++)
-    {
-         if(CheckCollisionRecs(s->player.playerRec,s->Inimigos[collisionI].inimigoRec))
-         {
-             if(*invulnTime==0)
-             {
-                 TakeDmg(&s->player);
-                 *invulnTime=30;
-             }
-         }
-    }
-    if(*invulnTime>0)
-     *invulnTime-=1;
-
-}
-*/
 
 /* A funcao Menu recebe um int type, 0 para o menu principal e 1 para o menu dentro do jogo, limitando as opcoes dependendo do contexto.
 Dependendo da tecla apertada realiza outras funcoes de manipulacao do estado do jogo */
@@ -1032,6 +1038,7 @@ int main()
     unpauseSound = LoadSound("./sound/unpause.mp3");
     texturaTitle = LoadTexture("TitleScreen.png");
     spriteBomba=LoadTexture("bomb.png");
+    spriteTrap=LoadTexture("trap.png");
     SetSoundVolume(deathSoundEnemy,0.8);
     SetSoundVolume(dmgSoundEnemy,0.8);
     SetSoundVolume(titleTheme,0.15); //SOUND VOLUME EH FLOAT ENTRE 0 E 1, SE BOTAR MAIS Q ISSO VAI ESTOURAR TEUS OUVIDO
@@ -1089,9 +1096,9 @@ int main()
                 PlayerAttackHandler(&status_jogo_atual.player);
                 ChecadorProjetil(status_jogo_atual.player.playerProj);
                 ChecadorObjeto(status_jogo_atual.Bombas,&status_jogo_atual.bombasNaFase,0);
+                ChecadorObjeto(status_jogo_atual.Armadilhas,&status_jogo_atual.armadilhasNaFase,1);
                 ChecadorInimigos(status_jogo_atual.Inimigos);
                 inimigoPerseguePlayer(&status_jogo_atual.Inimigos[1],&status_jogo_atual.player);
-                //CollisionHandler(&status_jogo_atual,&invulnTime);
                 tempo_atual+=GetFrameTime();
                 if(invulnTime>0)
                 {
