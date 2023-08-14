@@ -111,8 +111,8 @@ bool TomouDano = false;
 void ArmazenaPosicoes(STATUS *s)
 {
     int posiMatrix,posjMatrix,checador,coords[2]={};
-    posiMatrix=ceil((s->player.posplayer.y)/15);
-    posjMatrix=ceil((s->player.posplayer.x)/15);
+    posiMatrix=trunc((s->player.posplayer.y)/15);
+    posjMatrix=trunc((s->player.posplayer.x)/15);
     if(s->CurrentLevelMatrix[posiMatrix][posjMatrix]=='\0')
     s->CurrentLevelMatrix[posiMatrix][posjMatrix]='J';
     else
@@ -144,8 +144,8 @@ void ArmazenaPosicoes(STATUS *s)
     {
         if(s->Inimigos[l].ativo)
         {
-            posiMatrix = ceil((s->Inimigos[l].posInimigo.y)/15);
-            posjMatrix = ceil((s->Inimigos[l].posInimigo.x)/15);
+            posiMatrix = trunc((s->Inimigos[l].posInimigo.y)/15);
+            posjMatrix = trunc((s->Inimigos[l].posInimigo.x)/15);
             printf("y: %.2f x: %2.f \n",s->Inimigos[l].posInimigo.y,s->Inimigos[l].posInimigo.x);
             printf("y:%d x:%d\n",posiMatrix,posjMatrix);
             if(s->CurrentLevelMatrix[posiMatrix][posjMatrix]=='\0')
@@ -215,10 +215,10 @@ caso haja colisao, retorna 0, n da pra mover */
 int PodeMoverX(Vector2 dir, Vector2 pos, Vector2 newPos)
 {
     int posiLow,posj;
-    Rectangle newPosRec = (Rectangle){.x=newPos.x+dir.x,.y=newPos.y+dir.y,.width=30,.height=30};
+    Rectangle newPosRec = (Rectangle){.x=newPos.x,.y=newPos.y,.width=30,.height=30};
    // DrawRectangleRec(newPosRec,ORANGE);
-    posiLow=floor(pos.y/15);
-    posj=dir.x>0?floor((pos.x+30)/15)+1:floor(pos.x/15)-1;
+    posiLow=trunc(pos.y/15);
+    posj=dir.x>0?trunc(pos.x/15)+2:trunc(pos.x/15)-1;
 
     for(int i=0;i<3;i++)
     {
@@ -243,17 +243,17 @@ caso haja colisao, retorna 0, n da pra mover */
 int PodeMoverY(Vector2 dir, Vector2 pos, Vector2 newPos)
 {
     int posjLow,posiLow,posj,posi;
-    Rectangle newPosRec = (Rectangle){.x=newPos.x+dir.x,.y=newPos.y+dir.y,.width=30,.height=30};
+    Rectangle newPosRec = (Rectangle){.x=newPos.x,.y=newPos.y,.width=30,.height=30};
 //    DrawRectangleRec(newPosRec,ORANGE);
-    posjLow=floor(pos.x/15);
-    posi=dir.y>0?floor((pos.y+30)/15)+1:floor(pos.y/15)-1;
+    posjLow=trunc(pos.x/15);
+    posi=dir.y>0?trunc((pos.y/15))+2:trunc(pos.y/15)-1;
     for(int i=0;i<3;i++)
     {
         if(status_jogo_atual.CurrentLevelMatrix[posi][posjLow+i]=='#')
         {
                            // DrawRectangleRec((Rectangle){.x=(posjLow+1)*15,.y=posi*15,.width=15,.height=15},RED);
 
-            if(CheckCollisionRecs(newPosRec,(Rectangle){.x=(posjLow+1)*15,.y=posi*15,.width=15,.height=15}))
+            if(CheckCollisionRecs(newPosRec,(Rectangle){.x=(posjLow+i)*15,.y=posi*15,.width=15,.height=15}))
                 return 0;
 
         }
@@ -408,14 +408,15 @@ void Mover(PLAYER *p)
     if(PlayerMovementHandler(p))
     {
         Vector2 newPos;
-        newPos.x = p->dirPlayer.x*3;
-        newPos.y = p->dirPlayer.y*3;
+        newPos.x = p->dirPlayer.x*3+p->posplayer.x;
+        newPos.y =p->posplayer.y;
 
-        newPos = Vector2Add(newPos,p->posplayer);
         if(PodeMoverX(p->dirPlayer,p->posplayer,newPos))
         {
             p->posplayer.x+=p->dirPlayer.x*3;
         }
+         newPos.x = p->posplayer.x;
+         newPos.y = p->dirPlayer.y*3+p->posplayer.y;
         if(PodeMoverY(p->dirPlayer,p->posplayer,newPos))
         {
             p->posplayer.y+=p->dirPlayer.y*3;
