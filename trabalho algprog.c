@@ -495,6 +495,7 @@ void CarregaMapa(STATUS *s,int type)
     }
     s->InimigosNaFase=0;
     s->bombasNaFase=0;
+    s->armadilhasNaFase=0;
     for(int iMap=0; iMap<MAPLINES; iMap++)
     {
         for(int jMap=0; jMap<MAPCOLUMNS+1; jMap++)
@@ -515,6 +516,8 @@ void CarregaMapa(STATUS *s,int type)
                     s->Inimigos[s->InimigosNaFase].tipoInimigo = 1;
                     s->Inimigos[s->InimigosNaFase].HP = 5;
                     s->Inimigos[s->InimigosNaFase].ativo = true;
+                    s->Inimigos[s->InimigosNaFase].TomouDano = false;
+                    s->Inimigos[s->InimigosNaFase].flash_Duration=0.3;
                     gerarDirecaoAleatoria(&s->Inimigos[s->InimigosNaFase].dirInimigo);
                     s->CurrentLevelMatrix[iMap][jMap]='\0';
                     s->InimigosNaFase+=1;
@@ -550,10 +553,18 @@ void CarregaMapa(STATUS *s,int type)
 
     }
     //desativa os inimigos excedentes ao numero de inimigos na fase
-    for (int i = s->InimigosNaFase+1; i<MAX_INIMIGOS; i++)
+    for (int i = s->InimigosNaFase; i<MAX_INIMIGOS; i++)
     {
         s->Inimigos[i].ativo = false;
 
+    }
+    for(int i = s->armadilhasNaFase;i<MAX_OBJECTS;i++)
+    {
+        s->Armadilhas[i].ativo=false;
+    }
+     for(int i = s->bombasNaFase;i<MAX_OBJECTS;i++)
+    {
+        s->Bombas[i].ativo=false;
     }
     if(type==1)
     {
@@ -858,12 +869,18 @@ void CollisionPlayerPortal(PLAYER *p, OBJETO_ESTATICO *portal)
         CarregaMapa(&status_jogo_atual,0);
     }
 }
-void ChecadorPortal(OBJETO_ESTATICO *portal)
+void ChecadorPortal(STATUS *s)
 {
-    if(portal->ativo)
+
+    if(s->Portal.ativo)
     {
-        ObjetoRenderer(portal);
-        CollisionPlayerPortal(&status_jogo_atual.player,portal);
+        ObjetoRenderer(&s->Portal);
+        CollisionPlayerPortal(&s->player,&s->Portal);
+
+    }
+    else if(s->InimigosNaFase<=0)
+    {
+        s->Portal.ativo=true;
 
     }
 
@@ -1098,6 +1115,7 @@ int main()
                 ChecadorObjeto(status_jogo_atual.Bombas,&status_jogo_atual.bombasNaFase,0);
                 ChecadorObjeto(status_jogo_atual.Armadilhas,&status_jogo_atual.armadilhasNaFase,1);
                 ChecadorInimigos(status_jogo_atual.Inimigos);
+                ChecadorPortal(&status_jogo_atual);
                 inimigoPerseguePlayer(&status_jogo_atual.Inimigos[1],&status_jogo_atual.player);
                 tempo_atual+=GetFrameTime();
                 if(invulnTime>0)
