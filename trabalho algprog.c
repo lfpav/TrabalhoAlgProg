@@ -291,16 +291,16 @@ void inimigoPerseguePlayer(INIMIGO *Inim_ptr, PLAYER *p)
         tempo_i_chase=0;
      }
 
-     newPos.x = Inim_ptr->dirInimigo.x*2;
-     newPos.y = Inim_ptr->dirInimigo.y*2;
-
-     newPos = Vector2Add(newPos,Inim_ptr->posInimigo);
+     newPos.x = Inim_ptr->dirInimigo.x*2+Inim_ptr->posInimigo.x;
+     newPos.y = Inim_ptr->posInimigo.y;
 
    if(PodeMoverX(Inim_ptr->dirInimigo,Inim_ptr->posInimigo,newPos))
     {
         Inim_ptr->posInimigo.x+=Inim_ptr->dirInimigo.x*2;
 
     }
+    newPos.y = Inim_ptr->dirInimigo.y*2+Inim_ptr->posInimigo.y;
+    newPos.x = Inim_ptr->posInimigo.x;
      if(PodeMoverY(Inim_ptr->dirInimigo,Inim_ptr->posInimigo,newPos))
     {
         Inim_ptr->posInimigo.y+=Inim_ptr->dirInimigo.y*2;
@@ -454,18 +454,23 @@ int moveInimigo(INIMIGO *Inim_ptr,int *moveDuration)
     {
         *moveDuration-=1;
     }
-    newPos = Inim_ptr->dirInimigo;
-    newPos=Vector2Add(newPos,Inim_ptr->posInimigo);
+    newPos.x = Inim_ptr->dirInimigo.x + Inim_ptr->posInimigo.x;
+    newPos.y = Inim_ptr->posInimigo.y;
     if(!PodeMoverX(Inim_ptr->dirInimigo,Inim_ptr->posInimigo,newPos)||!PodeMoverY(Inim_ptr->dirInimigo,Inim_ptr->posInimigo,newPos))
     *moveDuration=0;
+    else
+    {
+        Inim_ptr->posInimigo.x+=Inim_ptr->dirInimigo.x*1;
+
+    }
+    newPos.x=Inim_ptr->posInimigo.x;
+    newPos.y=Inim_ptr->dirInimigo.y+Inim_ptr->posInimigo.y;
 
     if(!PodeMoverY(Inim_ptr->dirInimigo,Inim_ptr->posInimigo,newPos)||!PodeMoverY(Inim_ptr->dirInimigo,Inim_ptr->posInimigo,newPos))
 
     *moveDuration=0;
      else
-    {  if(PodeMoverX(Inim_ptr->dirInimigo,Inim_ptr->posInimigo,newPos))
-        Inim_ptr->posInimigo.x+=Inim_ptr->dirInimigo.x*1;
-       if(PodeMoverY(Inim_ptr->dirInimigo,Inim_ptr->posInimigo,newPos))
+    {
         Inim_ptr->posInimigo.y+=Inim_ptr->dirInimigo.y*1;
     }
     //printf("%.5f %.5f \n",Inim_ptr->dirInimigo.y,newPos.y);
