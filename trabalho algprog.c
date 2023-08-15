@@ -23,7 +23,10 @@ typedef struct Objetos_Estaticos_t
 {
     Vector2 posObjeto;
     Rectangle objetoRec;
+    Rectangle spriteSource;
     Texture2D spriteObjeto;
+    int quantiaFrames;
+    float frameTime;
     int tipoObjeto;
     bool ativo;
 } OBJETO_ESTATICO;
@@ -89,6 +92,7 @@ STATUS status_jogo_atual;
 Texture2D texturaTitle;
 Texture2D spriteBomba;
 Texture2D spriteTrap;
+Texture2D spritePortal;
 Sound pauseSound,selectionSound;
 Sound unpauseSound;
 Sound dmgSound,dmgSoundEnemy,deathSoundEnemy;
@@ -550,7 +554,10 @@ void CarregaMapa(STATUS *s,int type)
                  case 'P':
                 s->Portal.posObjeto.x=jMap*15;
                 s->Portal.posObjeto.y=iMap*15;
+                s->Portal.quantiaFrames = 2;
+                s->Portal.frameTime=0.5;
                 s->Portal.ativo=false;
+                s->Portal.spriteObjeto=spritePortal;
 
                 default:
                 break;
@@ -681,7 +688,7 @@ void NovoJogo(STATUS *s)
     {
         s->player.playerProj[i].ativo=false;
         s->player.playerProj[i].airTime=4;
-        s->player.playerProj[i].bullet=(Circle){.posCenter.x=0,.posCenter.y=0,.radius=10};
+        s->player.playerProj[i].bullet=(Circle){.posCenter.x=0,.posCenter.y=0,.radius=7.5};
 
 
     }
@@ -705,7 +712,7 @@ void CarregaJogo(STATUS *s)
     {
         s->player.playerProj[i].ativo=false;
         s->player.playerProj[i].airTime=4;
-        s->player.playerProj[i].bullet=(Circle){.posCenter.x=0,.posCenter.y=0,.radius=10};
+        s->player.playerProj[i].bullet=(Circle){.posCenter.x=0,.posCenter.y=0,.radius=7.5};
     }
 
     GameStart = true;
@@ -843,6 +850,25 @@ void ObjetoRenderer(OBJETO_ESTATICO *objeto)
     objeto->objetoRec = (Rectangle){.x=objeto->posObjeto.x,.y=objeto->posObjeto.y,.width=30,.height=30};
     DrawTextureEx(objeto->spriteObjeto,objeto->posObjeto,0,0.5,WHITE);
 }
+void ObjetoRendererPro(OBJETO_ESTATICO *objeto)
+{
+    objeto->objetoRec  =(Rectangle){.x=objeto->posObjeto.x,.y=objeto->posObjeto.y,.width=30,.height=30};
+    Rectangle dest = objeto->objetoRec;
+    dest.width = 64;
+    dest.height = 64;
+    objeto->frameTime-=GetFrameTime();
+    objeto->spriteSource = (Rectangle){0,0,64,64};
+    if(objeto->frameTime<=0.25)
+    {
+        objeto->spriteSource.x=64;
+        if(objeto->frameTime<=0)
+        {
+            objeto->frameTime=0.5;
+        }
+    }
+    DrawTexturePro(objeto->spriteObjeto,objeto->spriteSource,dest,(Vector2){dest.width/2,dest.height/2},0,WHITE);
+
+}
 void CollisionPlayerBomba(PLAYER *p,OBJETO_ESTATICO *bomba)
 {
     if(CheckCollisionRecs(p->playerRec,bomba->objetoRec))
@@ -880,7 +906,7 @@ void ChecadorPortal(STATUS *s)
 
     if(s->Portal.ativo)
     {
-        ObjetoRenderer(&s->Portal);
+        ObjetoRendererPro(&s->Portal);
         CollisionPlayerPortal(&s->player,&s->Portal);
 
     }
@@ -1060,6 +1086,7 @@ int main()
     selectionSound=LoadSound("./sound/selection.mp3");
     unpauseSound = LoadSound("./sound/unpause.mp3");
     texturaTitle = LoadTexture("TitleScreen.png");
+    spritePortal=LoadTexture("Portal.png");
     spriteBomba=LoadTexture("bomb.png");
     spriteTrap=LoadTexture("trap.png");
     SetSoundVolume(deathSoundEnemy,0.8);
