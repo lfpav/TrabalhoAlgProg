@@ -26,6 +26,7 @@ typedef struct Objetos_Estaticos_t
     Rectangle spriteSource;
     Texture2D spriteObjeto;
     int quantiaFrames;
+    int frameIndex;
     float frameTime;
     int tipoObjeto;
     bool ativo;
@@ -39,6 +40,12 @@ typedef struct Projetil_t
     bool ativo;
 
 }PROJETIL;
+
+typedef struct Bomb_t
+{
+    OBJETO_ESTATICO obj;
+    bool dandoDano;
+}BOMB_EXPL;
 
 typedef struct Inimigo_t
 {
@@ -82,6 +89,7 @@ typedef struct Status_Jogo_t
     OBJETO_ESTATICO Portal;
     float tempo_restante;
     int mapaAtual;
+    int pontuacao;
     int InimigosNaFase;
     int bombasNaFase;
     int armadilhasNaFase;
@@ -98,6 +106,7 @@ Sound unpauseSound;
 Sound dmgSound,dmgSoundEnemy,deathSoundEnemy;
 Sound titleTheme;
 Font fonteTitle;
+bool jogoAtivo=true;
 int invulnTime=0;
 float tempo_i_chase =0;
 float sizeMulti[4]={1,1,1,1};
@@ -208,7 +217,7 @@ void SalvaJogo(STATUS *s)
 
         }
     }
-    fprintf(savegame,"%d\n%d\n%d\n%.1f",s->player.HP,s->player.bombAmount,s->mapaAtual,tempo_atual);
+    fprintf(savegame,"%d\n%d\n%d\n%.1f\n%d",s->player.HP,s->player.bombAmount,s->mapaAtual,tempo_atual,s->pontuacao);
     fclose(savegame);
 
 }
@@ -498,6 +507,12 @@ void CarregaMapa(STATUS *s,int type)
     int contadorInimigos = 0;
     //teste !!!!!!!!
     FILE* mapaLevel = fopen(levelName,"r");
+    if(mapaLevel==NULL)
+    {
+        printf("haur");
+        jogoAtivo = false;
+
+    }
     if(type==1)
     {
         fclose(mapaLevel);
@@ -581,7 +596,7 @@ void CarregaMapa(STATUS *s,int type)
     }
     if(type==1)
     {
-        fscanf(mapaLevel,"%d\n%d\n%d\n%f",&s->player.HP,&s->player.bombAmount,&s->mapaAtual,&s->tempo_restante);
+        fscanf(mapaLevel,"%d\n%d\n%d\n%f\n%d",&s->player.HP,&s->player.bombAmount,&s->mapaAtual,&s->tempo_restante,&s->pontuacao);
         printf("%.1f",s->tempo_restante);
 
     }
@@ -667,6 +682,7 @@ void UnpausedRenderer(STATUS *s)
     DrawText(TextFormat("Tempo:%.1f s",tempo_atual),0,500,50,BLACK);
     DrawText(TextFormat("Vida:%d",status_jogo_atual.player.HP),0,550,50,BLACK);
     DrawText(TextFormat("Bombas:%d",status_jogo_atual.player.bombAmount),0,600,50,BLACK);
+    DrawText(TextFormat("Pontos:%d",status_jogo_atual.pontuacao),0,650,50,BLACK);
     DrawText(TextFormat("Mapa atual:%d",status_jogo_atual.mapaAtual),0,450,50,BLACK);
     DrawText(TextFormat("Inimigos:%d",status_jogo_atual.InimigosNaFase),0,700,50,BLACK);
 
@@ -682,6 +698,7 @@ void NovoJogo(STATUS *s)
     s->mapaAtual=1;
     s->player.projetilIndex=0;
     s->player.fire_Delay=0;
+    s->pontuacao=0;
 
 
     for(int i=0;i<MAX_PROJETEIS;i++)
@@ -694,6 +711,7 @@ void NovoJogo(STATUS *s)
     }
 
     CarregaMapa(s,0);
+    jogoAtivo=true;
     GameStart = true;
     s->tempo_restante=0;
     tempo_atual=s->tempo_restante;
@@ -715,6 +733,7 @@ void CarregaJogo(STATUS *s)
         s->player.playerProj[i].bullet=(Circle){.posCenter.x=0,.posCenter.y=0,.radius=7.5};
     }
 
+    jogoAtivo=true;
     GameStart = true;
     tempo_atual=s->tempo_restante;
 
@@ -765,6 +784,7 @@ void TakeDmgEnemy(INIMIGO *inim)
         PlaySound(deathSoundEnemy);
         printf("dead!");
         inim->ativo=false;
+        status_jogo_atual.pontuacao+=100;
         status_jogo_atual.InimigosNaFase-=1;
 
     }
@@ -1120,7 +1140,7 @@ int main()
             EndDrawing();
 
         }
-        if(status_jogo_atual.player.vivo)
+        if(status_jogo_atual.player.vivo&&jogoAtivo)
         {
             if(IsKeyPressed(KEY_ESCAPE))
             {
@@ -1163,7 +1183,7 @@ int main()
             }
 
         }
-        if(status_jogo_atual.player.vivo==false)
+        if(status_jogo_atual.player.vivo==false||jogoAtivo==false)
         {
             Menu(0);
         }
