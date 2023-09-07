@@ -129,12 +129,20 @@ void ArmazenaPosicoes(STATUS *s)
 {
     int posiMatrix,posjMatrix,checador,coords[2]={};
     posiMatrix=trunc((s->player.posplayer.y)/15);
+    printf(" HAURR %d \n",posiMatrix);
     posjMatrix=trunc((s->player.posplayer.x)/15);
+    printf("o char eh %c \n",s->CurrentLevelMatrix[posiMatrix][posjMatrix]);
     if(s->CurrentLevelMatrix[posiMatrix][posjMatrix]=='\0')
-    s->CurrentLevelMatrix[posiMatrix][posjMatrix]='J';
+    {
+        s->CurrentLevelMatrix[posiMatrix][posjMatrix]='J';
+        printf("o char antes vazio agr eh %c\n",s->CurrentLevelMatrix[posiMatrix][posjMatrix]);
+
+
+    }
     else
     {
-    for(int i=0; i<MAPLINES; i++)
+        printf("hunga");
+        for(int i=0; i<MAPLINES; i++)
         {
             if(s->CurrentLevelMatrix[i][posjMatrix]=='\0')
             {
@@ -148,7 +156,6 @@ void ArmazenaPosicoes(STATUS *s)
                     if(s->CurrentLevelMatrix[i][j]=='\0')
                     {
                         s->CurrentLevelMatrix[i][j]='J';
-                        printf("clear on attempt %d",j);
                         i=MAPLINES;
                         j=MAPCOLUMNS;
                     }
@@ -593,8 +600,12 @@ void CarregaMapa(STATUS *s,int type)
                 s->Portal.frameTime=0.5;
                 s->Portal.ativo=false;
                 s->Portal.spriteObjeto=spritePortal;
+                break;
+                case '#':
+                break;
 
                 default:
+                s->CurrentLevelMatrix[iMap][jMap]='\0';
                 break;
             }
         }
