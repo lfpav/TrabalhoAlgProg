@@ -56,6 +56,8 @@ typedef struct Inimigo_t
     float flash_Duration;
     bool TomouDano;
     int tipoInimigo;
+    float tempoChase;
+    int moveDuration;
     int HP;
     bool ativo;
 } INIMIGO;
@@ -75,6 +77,7 @@ typedef struct Player_t
     int bombAmount;
     int projetilIndex;
     PROJETIL playerProj[MAX_PROJETEIS];
+    BOMB_EXPL Bomb;
 
 
 
@@ -100,12 +103,13 @@ STATUS status_jogo_atual;
 Texture2D texturaTitle;
 Texture2D spriteBomba;
 Texture2D spriteTrap;
-Texture2D spritePortal;
+Texture2D spritePortal,spriteBombExpl;
 Sound pauseSound,selectionSound;
-Sound unpauseSound;
+Sound unpauseSound,explosionSound;
 Sound dmgSound,dmgSoundEnemy,deathSoundEnemy;
 Sound titleTheme;
 Font fonteTitle;
+int moveDuration = 0;
 bool jogoAtivo=true;
 int invulnTime=0;
 float tempo_i_chase =0;
@@ -279,12 +283,12 @@ int PodeMoverY(Vector2 dir, Vector2 pos, Vector2 newPos)
 }
 
 /* algoritmo de inimigo que persegue o jogador */
-void inimigoPerseguePlayer(INIMIGO *Inim_ptr, PLAYER *p)
+void inimigoPerseguePlayer(INIMIGO *Inim_ptr, PLAYER *p,float *tempo_i_chase)
  {
      Vector2 newPos;
      Vector2 not_Norm,Norm,atualDir;
-     tempo_i_chase += GetFrameTime();
-     if(tempo_i_chase>0.1)
+     *tempo_i_chase += GetFrameTime();
+     if(*tempo_i_chase>0.25)
      {
          not_Norm = Vector2Subtract(p->posplayer,Inim_ptr->posInimigo);
          Norm = Vector2Normalize(not_Norm);
@@ -301,7 +305,7 @@ void inimigoPerseguePlayer(INIMIGO *Inim_ptr, PLAYER *p)
              Inim_ptr->dirInimigo.y = Norm.y;
          }
 
-        tempo_i_chase=0;
+        *tempo_i_chase=0;
      }
 
      newPos.x = Inim_ptr->dirInimigo.x*2+Inim_ptr->posInimigo.x;
@@ -441,16 +445,20 @@ void Mover(PLAYER *p)
 void gerarDirecaoAleatoria(Vector2 *dir)
 {
     int dx,dy;
+    int a = 0,b=0;
     do
     {
         dx= -1 + rand() % 3;
+        a++;
+
     }
-    while(dx==0);
+    while(dx==0 && a<20);
     do
     {
         dy=-1 + rand()%3;
+        b++;
     }
-    while(dy==0);
+    while(dy==0 && b<20);
     dir->x=dx;
     dir->y=dy;
 }
@@ -458,7 +466,7 @@ void gerarDirecaoAleatoria(Vector2 *dir)
 int moveInimigo(INIMIGO *Inim_ptr,int *moveDuration)
 {
     Vector2 newPos;
-    if(*moveDuration==0)
+    if(*moveDuration<=0)
     {
         gerarDirecaoAleatoria(&Inim_ptr->dirInimigo);
         *moveDuration = 10 +rand()%100;
@@ -507,10 +515,14 @@ void CarregaMapa(STATUS *s,int type)
     int contadorInimigos = 0;
     //teste !!!!!!!!
     FILE* mapaLevel = fopen(levelName,"r");
-    if(mapaLevel==NULL)
+    if(mapaLevel==NULL||s->mapaAtual>99)
     {
-        printf("haur");
         jogoAtivo = false;
+        s->pontuacao+=(10000-(tempo_atual*(log(tempo_atual))));
+        if(s->pontuacao<0)
+        {
+            s->pontuacao=0;
+        }
 
     }
     if(type==1)
@@ -531,6 +543,12 @@ void CarregaMapa(STATUS *s,int type)
                 case 'J':
                 s->player.posplayer.x = jMap*15;
                 s->player.posplayer.y = iMap*15;
+                s->player.Bomb.obj.ativo=false;
+                s->player.Bomb.dandoDano=false;
+                s->player.Bomb.obj.frameIndex=0;
+                s->player.Bomb.obj.frameTime=0.25;
+                s->player.Bomb.obj.quantiaFrames=22;
+                s->player.Bomb.obj.spriteObjeto=spriteBombExpl;
                 s->CurrentLevelMatrix[iMap][jMap]='\0';
                 break;
                 case 'I':
@@ -540,6 +558,8 @@ void CarregaMapa(STATUS *s,int type)
                     s->Inimigos[s->InimigosNaFase].posInimigo.y = iMap*15;
                     s->Inimigos[s->InimigosNaFase].tipoInimigo = 1;
                     s->Inimigos[s->InimigosNaFase].HP = 5;
+                    s->Inimigos[s->InimigosNaFase].tempoChase = 0;
+                    s->Inimigos[s->InimigosNaFase].moveDuration= 0;
                     s->Inimigos[s->InimigosNaFase].ativo = true;
                     s->Inimigos[s->InimigosNaFase].TomouDano = false;
                     s->Inimigos[s->InimigosNaFase].flash_Duration=0.3;
@@ -584,6 +604,8 @@ void CarregaMapa(STATUS *s,int type)
     for (int i = s->InimigosNaFase; i<MAX_INIMIGOS; i++)
     {
         s->Inimigos[i].ativo = false;
+        s->Inimigos[s->InimigosNaFase].moveDuration= 0;
+
 
     }
     for(int i = s->armadilhasNaFase;i<MAX_OBJECTS;i++)
@@ -861,6 +883,14 @@ void ChecadorInimigos(INIMIGO inimigo[MAX_INIMIGOS])
         {
             InimigoRenderer(&inimigo[i]);
             CollisionPlayerEnemy(&status_jogo_atual.player,&inimigo[i]);
+            if(i%2!=0)
+            {
+                moveInimigo(&inimigo[i],&inimigo[i].moveDuration);
+            }
+            else
+            {
+                inimigoPerseguePlayer(&inimigo[i],&status_jogo_atual.player,&inimigo[i].tempoChase);
+            }
 
         }
     }
@@ -887,6 +917,92 @@ void ObjetoRendererPro(OBJETO_ESTATICO *objeto)
         }
     }
     DrawTexturePro(objeto->spriteObjeto,objeto->spriteSource,dest,(Vector2){dest.width/2,dest.height/2},0,WHITE);
+
+}
+void BombaColocadaRenderer(BOMB_EXPL *b)
+{
+    b->obj.objetoRec=(Rectangle){.x=b->obj.posObjeto.x,.y=b->obj.posObjeto.y,.width=64,.height=64};
+    Rectangle dest = b->obj.objetoRec;
+    b->obj.spriteSource = (Rectangle){0,0,64,64};
+    b->obj.spriteSource.x=64*b->obj.frameIndex;
+    b->obj.frameTime-=GetFrameTime();
+    if(b->obj.frameTime<=0)
+    {
+        b->obj.frameIndex+=1;
+        b->obj.frameTime=0.1;
+    }
+    if(b->obj.frameIndex==16)
+    {
+        PlaySound(explosionSound);
+    }
+    if(b->obj.frameIndex>=16 && b->obj.frameIndex<22)
+    {
+        b->dandoDano=true;
+    }
+    if(b->obj.frameIndex>=22)
+    {
+        b->dandoDano=false;
+        b->obj.ativo=false;
+        b->obj.frameTime=0.1;
+        b->obj.frameIndex=0;
+    }
+    DrawTexturePro(b->obj.spriteObjeto,b->obj.spriteSource,dest,(Vector2){0,0},0,WHITE);
+
+}
+void ChecaColisaoBombaInim(INIMIGO *inim)
+{
+    if(CheckCollisionRecs(status_jogo_atual.player.Bomb.obj.objetoRec,inim->inimigoRec))
+    {
+        inim->HP=0;
+        TakeDmgEnemy(inim);
+    }
+
+}
+void TentaSpawnarBomba(BOMB_EXPL *b)
+{
+    printf("bomb sabugada");
+    if(!b->obj.ativo && status_jogo_atual.player.bombAmount>0)
+    {
+        b->obj.posObjeto.x=status_jogo_atual.player.posplayer.x;
+        b->obj.posObjeto.y=status_jogo_atual.player.posplayer.y;
+
+        printf("bomb esbugalhada");
+        status_jogo_atual.player.bombAmount-=1;
+        b->dandoDano=false;
+        b->obj.ativo=true;
+        b->obj.frameTime=0.1;
+        b->obj.frameIndex=0;
+
+    }
+}
+void PlayerBombInput(PLAYER *p)
+{
+    if(IsKeyPressed(KEY_E))
+    {
+        printf("bomba coisasda");
+        TentaSpawnarBomba(&p->Bomb);
+    }
+}
+void BombaColocadaHandler(BOMB_EXPL *b)
+{
+
+    if(b->obj.ativo)
+    {
+
+
+        BombaColocadaRenderer(b);
+        if(b->dandoDano)
+        {
+            for(int i=0;i<MAX_INIMIGOS;i++)
+            {
+                if(status_jogo_atual.Inimigos[i].ativo)
+                {
+                    ChecaColisaoBombaInim(&status_jogo_atual.Inimigos[i]);
+
+                }
+            }
+        }
+    }
 
 }
 void CollisionPlayerBomba(PLAYER *p,OBJETO_ESTATICO *bomba)
@@ -1009,6 +1125,15 @@ void DeathScreenRenderer()
 
 }
 
+void EndScreenRenderer()
+{
+    DrawRectangleV((Vector2){0,0}, (Vector2){900, 750}, CLITERAL(Color){ 0, 0, 0, 128 });
+    DrawText("Voce ganhou!",300,100,50,BLACK);
+    DrawText(TextFormat("Pontuacao:%d",status_jogo_atual.pontuacao),300,150,50,BLACK);
+
+
+}
+
 /* A funcao Menu recebe um int type, 0 para o menu principal e 1 para o menu dentro do jogo, limitando as opcoes dependendo do contexto.
 Dependendo da tecla apertada realiza outras funcoes de manipulacao do estado do jogo */
 void Menu(int type)
@@ -1104,8 +1229,10 @@ int main()
     pauseSound = LoadSound("./sound/pause.mp3");
     deathSoundEnemy=LoadSound("./sound/deathSoundEnemy.mp3");
     selectionSound=LoadSound("./sound/selection.mp3");
+    explosionSound=LoadSound("./sound/explosion.mp3");
     unpauseSound = LoadSound("./sound/unpause.mp3");
     texturaTitle = LoadTexture("TitleScreen.png");
+    spriteBombExpl = LoadTexture("bombsheet.png");
     spritePortal=LoadTexture("Portal.png");
     spriteBomba=LoadTexture("bomb.png");
     spriteTrap=LoadTexture("trap.png");
@@ -1114,7 +1241,6 @@ int main()
     SetSoundVolume(titleTheme,0.15); //SOUND VOLUME EH FLOAT ENTRE 0 E 1, SE BOTAR MAIS Q ISSO VAI ESTOURAR TEUS OUVIDO
     fonteTitle = LoadFontEx("SunnyspellsRegular-MV9ze.otf",75,NULL,0);
     sapo=LoadTexture("sapo.png");
-    int moveDuration =0;
     SetExitKey(KEY_Q);
     status_jogo_atual.player.TomouDano=false;
     status_jogo_atual.player.spriteColor=WHITE;
@@ -1162,14 +1288,14 @@ int main()
             if(!Pausado)
             {
                 Mover(&status_jogo_atual.player);
-                moveInimigo(&status_jogo_atual.Inimigos[0],&moveDuration);
                 PlayerAttackHandler(&status_jogo_atual.player);
+                PlayerBombInput(&status_jogo_atual.player);
+                BombaColocadaHandler(&status_jogo_atual.player.Bomb);
                 ChecadorProjetil(status_jogo_atual.player.playerProj);
                 ChecadorObjeto(status_jogo_atual.Bombas,&status_jogo_atual.bombasNaFase,0);
                 ChecadorObjeto(status_jogo_atual.Armadilhas,&status_jogo_atual.armadilhasNaFase,1);
                 ChecadorInimigos(status_jogo_atual.Inimigos);
                 ChecadorPortal(&status_jogo_atual);
-                inimigoPerseguePlayer(&status_jogo_atual.Inimigos[1],&status_jogo_atual.player);
                 tempo_atual+=GetFrameTime();
                 if(invulnTime>0)
                 {
@@ -1195,6 +1321,10 @@ int main()
           if(Pausado)
         {
             PausaRenderer();
+        }
+        if(jogoAtivo==false)
+        {
+            EndScreenRenderer();
         }
         if(status_jogo_atual.player.vivo==false)
         {
