@@ -109,16 +109,11 @@ Sound unpauseSound,explosionSound;
 Sound dmgSound,dmgSoundEnemy,deathSoundEnemy;
 Sound titleTheme;
 Font fonteTitle;
-int SomMusica[10] = {1, 1, 1, 1, 1, 0, 0, 0, 0, 0};
-float SomDaMusica = 0.20;
-int SomEfeitosSonoros[10] = {1, 1, 1, 1, 1, 0, 0, 0, 0, 0};
-float SomDosEfeitosSonoros = 1.0;
 int moveDuration = 0;
 bool jogoAtivo=true;
 int invulnTime=0;
 float tempo_i_chase =0;
 float sizeMulti[5]={1,1,1,1,1};
-
 Rectangle RetangulosTitle[3] = {(Rectangle)
 {.x=225,.y=450,.width=360,.height=60},
 {.x=225,.y=550,.width=450,.height=60},
@@ -165,26 +160,38 @@ Rectangle RetangulosDeEfeitoSonoro[10] ={(Rectangle)
 {603, 200, 10, 35}};
 
 Color cores[2] = {WHITE, BLACK};
-
+bool PausadoConfig = false;
 bool GameStart = false;
 Texture2D sapo;
 time_t tempo_inicio;
 float tempo_atual;
 float tempo_pausado;
 bool Pausado = false;
-bool PausadoConfig = false;
 float flash_Duration = 0.5;
 bool TomouDano = false;
+int SomMusica[10] = {1, 1, 1, 1, 1, 0, 0, 0, 0, 0};
+float SomDaMusica = 0.20;
+int SomEfeitosSonoros[10] = {1, 1, 1, 1, 1, 0, 0, 0, 0, 0};
+float SomDosEfeitosSonoros = 1.0;
+
 void ArmazenaPosicoes(STATUS *s)
 {
     int posiMatrix,posjMatrix,checador,coords[2]={};
     posiMatrix=trunc((s->player.posplayer.y)/15);
+    printf(" HAURR %d \n",posiMatrix);
     posjMatrix=trunc((s->player.posplayer.x)/15);
+    printf("o char eh %c \n",s->CurrentLevelMatrix[posiMatrix][posjMatrix]);
     if(s->CurrentLevelMatrix[posiMatrix][posjMatrix]=='\0')
-    s->CurrentLevelMatrix[posiMatrix][posjMatrix]='J';
+    {
+        s->CurrentLevelMatrix[posiMatrix][posjMatrix]='J';
+        printf("o char antes vazio agr eh %c\n",s->CurrentLevelMatrix[posiMatrix][posjMatrix]);
+
+
+    }
     else
     {
-    for(int i=0; i<MAPLINES; i++)
+        printf("hunga");
+        for(int i=0; i<MAPLINES; i++)
         {
             if(s->CurrentLevelMatrix[i][posjMatrix]=='\0')
             {
@@ -198,7 +205,6 @@ void ArmazenaPosicoes(STATUS *s)
                     if(s->CurrentLevelMatrix[i][j]=='\0')
                     {
                         s->CurrentLevelMatrix[i][j]='J';
-                        printf("clear on attempt %d",j);
                         i=MAPLINES;
                         j=MAPCOLUMNS;
                     }
@@ -643,8 +649,12 @@ void CarregaMapa(STATUS *s,int type)
                 s->Portal.frameTime=0.5;
                 s->Portal.ativo=false;
                 s->Portal.spriteObjeto=spritePortal;
+                break;
+                case '#':
+                break;
 
                 default:
+                s->CurrentLevelMatrix[iMap][jMap]='\0';
                 break;
             }
         }
@@ -696,11 +706,10 @@ void PausaRenderer()
     DrawText("Carregar Jogo - C",270,300,40*sizeMulti[2],BLACK);
     DrawText("Configuracoes - O",270,350,40*sizeMulti[3],BLACK);
     DrawText("Sair - Q",350,400,40*sizeMulti[4],BLACK);
-
       for(int iPausa=0;iPausa<5;iPausa++)
     {
         float firstSize = sizeMulti[iPausa];
-        DrawRectangle(RetangulosPausa[iPausa].x,RetangulosPausa[iPausa].y,RetangulosPausa[iPausa].width,RetangulosPausa[iPausa].height, BLANK);
+        DrawRectangle(RetangulosPausa[iPausa].x,RetangulosPausa[iPausa].y,RetangulosPausa[iPausa].width,RetangulosPausa[iPausa].height,BLANK);
         if(CheckCollisionPointRec(GetMousePosition(),RetangulosPausa[iPausa]))
         {
             sizeMulti[iPausa]=1.25;
@@ -1040,6 +1049,8 @@ void BombaColocadaHandler(BOMB_EXPL *b)
 
     if(b->obj.ativo)
     {
+
+
         BombaColocadaRenderer(b);
         if(b->dandoDano)
         {
@@ -1053,8 +1064,8 @@ void BombaColocadaHandler(BOMB_EXPL *b)
             }
         }
     }
-}
 
+}
 void CollisionPlayerBomba(PLAYER *p,OBJETO_ESTATICO *bomba)
 {
     if(CheckCollisionRecs(p->playerRec,bomba->objetoRec))
@@ -1181,8 +1192,9 @@ void EndScreenRenderer()
     DrawText("Voce ganhou!",300,100,50,BLACK);
     DrawText(TextFormat("Pontuacao:%d",status_jogo_atual.pontuacao),300,150,50,BLACK);
 
+
 }
-ControleMusica(int iMusica)
+void ControleMusica(int iMusica)
 {
 
     for(int i = 0; i<=iMusica;i++)
@@ -1201,7 +1213,7 @@ ControleMusica(int iMusica)
     SetSoundVolume(titleTheme, SomDaMusica);
 }
 
-ControleEfeitosSonoros(int iEfeitos)
+void ControleEfeitosSonoros(int iEfeitos)
 {
 
     for(int i = 0; i<=iEfeitos;i++)
@@ -1224,8 +1236,78 @@ ControleEfeitosSonoros(int iEfeitos)
     SetSoundVolume(explosionSound,SomDosEfeitosSonoros);
     SetSoundVolume(unpauseSound,SomDosEfeitosSonoros);
 }
+
 /* A funcao Menu recebe um int type, 0 para o menu principal e 1 para o menu dentro do jogo, limitando as opcoes dependendo do contexto.
 Dependendo da tecla apertada realiza outras funcoes de manipulacao do estado do jogo */
+void MenuConfig()
+{
+    DrawRectangleV((Vector2){0,0}, (Vector2){900, 750}, CLITERAL(Color){ 0, 0, 0, 128 });
+    DrawRectangleV((Vector2){200,50},(Vector2){500,630},GREEN);
+    DrawText("PAUSED",350,100,50,BLACK);
+    DrawText(TextFormat("Tempo:%.1f s",tempo_atual),0,25,30,BLACK);
+    DrawText(TextFormat("Vida:%d",status_jogo_atual.player.HP),0,75,30,BLACK);
+    DrawText(TextFormat("Bombas:%d",status_jogo_atual.player.bombAmount),0,125,30,BLACK);
+    DrawText(TextFormat("Mapa atual:%d",status_jogo_atual.mapaAtual),0,175,30,BLACK);
+    DrawText(TextFormat("Inimigos:%d",status_jogo_atual.InimigosNaFase),0,225,30,BLACK);
+    DrawText("SFX",310,200,40*sizeMulti[0],BLACK);
+    DrawText("Musica",250,250,40*sizeMulti[1],BLACK);
+    DrawText("Tela Cheia - F",310,300,40*sizeMulti[2],BLACK);
+    DrawText("Voltar - Z",340,350,40*sizeMulti[3],BLACK);
+
+
+     for(int iConfig=0;iConfig<2;iConfig++)
+        {
+            float firstSize = sizeMulti[iConfig+2];
+            DrawRectangle(RetangulosConfigMenu[iConfig].x,RetangulosConfigMenu[iConfig].y,RetangulosConfigMenu[iConfig].width,RetangulosConfigMenu[iConfig].height, BLANK);
+            if(CheckCollisionPointRec(GetMousePosition(),RetangulosConfigMenu[iConfig]))
+            {
+                sizeMulti[iConfig+2]=1.25;
+            }
+            else
+            {
+                sizeMulti[iConfig+2]=1;
+            }
+            if(firstSize-sizeMulti[iConfig+2]<0)
+            {
+                PlaySound(selectionSound);
+            }
+        }
+        for(int iSom=0;iSom<10;iSom++)
+        {
+            float firstSize = sizeMulti[iSom];
+            DrawRectangle(RetangulosDeSomMusica[iSom].x, RetangulosDeSomMusica[iSom].y, RetangulosDeSomMusica[iSom].width, RetangulosDeSomMusica[iSom].height, cores[1]);
+            DrawRectangle(RetangulosDeEfeitoSonoro[iSom].x, RetangulosDeEfeitoSonoro[iSom].y, RetangulosDeEfeitoSonoro[iSom].width, RetangulosDeEfeitoSonoro[iSom].height, cores[1]);
+
+            if(CheckCollisionPointRec(GetMousePosition(),RetangulosDeSomMusica[iSom]))
+            {
+                SomMusica[iSom]=2;
+            }
+
+            else
+                SomMusica[iSom]=0;
+
+
+            if(CheckCollisionPointRec(GetMousePosition(),RetangulosDeEfeitoSonoro[iSom]))
+            {
+                SomEfeitosSonoros[iSom]=2;
+            }
+
+            else
+                SomEfeitosSonoros[iSom]=0;
+        }
+
+            int m = (int)(SomDaMusica/0.05);
+            int sfx = (int)(SomDosEfeitosSonoros/0.25);
+            for(int i = 0; i<=m;i++)
+            {
+                DrawRectangle(RetangulosDeSomMusica[i].x+1.5, RetangulosDeSomMusica[i].y+1.5, RetangulosDeSomMusica[i].width-3, RetangulosDeSomMusica[i].height-3, cores[0]);
+            }
+            for(int k = 0; k<=sfx;k++)
+            {
+                DrawRectangle(RetangulosDeEfeitoSonoro[k].x+1.5, RetangulosDeEfeitoSonoro[k].y+1.5, RetangulosDeEfeitoSonoro[k].width-3, RetangulosDeEfeitoSonoro[k].height-3, cores[0]);
+            }
+
+}
 void Menu(int type)
 {
     if(IsMouseButtonPressed(0))
@@ -1321,76 +1403,6 @@ void Menu(int type)
     }
 }
 
-void MenuConfig()
-{
-    DrawRectangleV((Vector2){0,0}, (Vector2){900, 750}, CLITERAL(Color){ 0, 0, 0, 128 });
-    DrawRectangleV((Vector2){200,50},(Vector2){500,630},GREEN);
-    DrawText("PAUSED",350,100,50,BLACK);
-    DrawText(TextFormat("Tempo:%.1f s",tempo_atual),0,25,30,BLACK);
-    DrawText(TextFormat("Vida:%d",status_jogo_atual.player.HP),0,75,30,BLACK);
-    DrawText(TextFormat("Bombas:%d",status_jogo_atual.player.bombAmount),0,125,30,BLACK);
-    DrawText(TextFormat("Mapa atual:%d",status_jogo_atual.mapaAtual),0,175,30,BLACK);
-    DrawText(TextFormat("Inimigos:%d",status_jogo_atual.InimigosNaFase),0,225,30,BLACK);
-    DrawText("SFX",310,200,40*sizeMulti[0],BLACK);
-    DrawText("Musica",250,250,40*sizeMulti[1],BLACK);
-    DrawText("Tela Cheia - F",310,300,40*sizeMulti[2],BLACK);
-    DrawText("Voltar - Z",340,350,40*sizeMulti[3],BLACK);
-
-
-     for(int iConfig=0;iConfig<2;iConfig++)
-        {
-            float firstSize = sizeMulti[iConfig+2];
-            DrawRectangle(RetangulosConfigMenu[iConfig].x,RetangulosConfigMenu[iConfig].y,RetangulosConfigMenu[iConfig].width,RetangulosConfigMenu[iConfig].height, BLANK);
-            if(CheckCollisionPointRec(GetMousePosition(),RetangulosConfigMenu[iConfig]))
-            {
-                sizeMulti[iConfig+2]=1.25;
-            }
-            else
-            {
-                sizeMulti[iConfig+2]=1;
-            }
-            if(firstSize-sizeMulti[iConfig+2]<0)
-            {
-                PlaySound(selectionSound);
-            }
-        }
-        for(int iSom=0;iSom<10;iSom++)
-        {
-            float firstSize = sizeMulti[iSom];
-            DrawRectangle(RetangulosDeSomMusica[iSom].x, RetangulosDeSomMusica[iSom].y, RetangulosDeSomMusica[iSom].width, RetangulosDeSomMusica[iSom].height, cores[1]);
-            DrawRectangle(RetangulosDeEfeitoSonoro[iSom].x, RetangulosDeEfeitoSonoro[iSom].y, RetangulosDeEfeitoSonoro[iSom].width, RetangulosDeEfeitoSonoro[iSom].height, cores[1]);
-
-            if(CheckCollisionPointRec(GetMousePosition(),RetangulosDeSomMusica[iSom]))
-            {
-                SomMusica[iSom]=2;
-            }
-
-            else
-                SomMusica[iSom]=0;
-
-
-            if(CheckCollisionPointRec(GetMousePosition(),RetangulosDeEfeitoSonoro[iSom]))
-            {
-                SomEfeitosSonoros[iSom]=2;
-            }
-
-            else
-                SomEfeitosSonoros[iSom]=0;
-        }
-
-            int m = (int)(SomDaMusica/0.05);
-            int sfx = (int)(SomDosEfeitosSonoros/0.25);
-            for(int i = 0; i<=m;i++)
-            {
-                DrawRectangle(RetangulosDeSomMusica[i].x+1.5, RetangulosDeSomMusica[i].y+1.5, RetangulosDeSomMusica[i].width-3, RetangulosDeSomMusica[i].height-3, cores[0]);
-            }
-            for(int k = 0; k<=sfx;k++)
-            {
-                DrawRectangle(RetangulosDeEfeitoSonoro[k].x+1.5, RetangulosDeEfeitoSonoro[k].y+1.5, RetangulosDeEfeitoSonoro[k].width-3, RetangulosDeEfeitoSonoro[k].height-3, cores[0]);
-            }
-
-}
-
 
 /* A funcao TitleScreen renderiza o fundo e outros elementos da tela de titulo, e chama a fncao Menu com o type 0, limitando as opcoes disponiveis para
 Novo Jogo, Carregar Jogo ou Sair */
@@ -1423,10 +1435,8 @@ void TitleScreen()
     DrawTextEx(fonteTitle,"Sair - Q",(Vector2){222,647},60*sizeMulti[2],0,BLACK);
     DrawTextEx(fonteTitle,"Sair - Q",(Vector2){225,650},60*sizeMulti[2],0,TURQUOISE);
     Menu(0);
+
 }
-
-
-
 int main()
 {
     InitWindow(900,750, "trabalho");
@@ -1454,7 +1464,7 @@ int main()
     SetSoundVolume(selectionSound,SomDosEfeitosSonoros);
     SetSoundVolume(explosionSound,SomDosEfeitosSonoros);
     SetSoundVolume(unpauseSound,SomDosEfeitosSonoros);
-    SetSoundVolume(titleTheme, SomDaMusica); //SOUND VOLUME EH FLOAT ENTRE 0 E 1, SE BOTAR MAIS Q ISSO VAI ESTOURAR TEUS OUVIDO
+    SetSoundVolume(titleTheme,SomDaMusica); //SOUND VOLUME EH FLOAT ENTRE 0 E 1, SE BOTAR MAIS Q ISSO VAI ESTOURAR TEUS OUVIDO
     fonteTitle = LoadFontEx("SunnyspellsRegular-MV9ze.otf",75,NULL,0);
     sapo=LoadTexture("sapo.png");
     SetExitKey(KEY_Q);
@@ -1499,9 +1509,9 @@ int main()
 
                 }
                 Pausado = !Pausado;
-                PausadoConfig = false;
-            }
+                PausadoConfig=false;
 
+            }
             if(!Pausado)
             {
                 Mover(&status_jogo_atual.player);
@@ -1523,11 +1533,14 @@ int main()
             if(Pausado)
             {
                 if(PausadoConfig)
-            {
-                Menu(2);
-            }
-            else
-                Menu(1);
+                {
+                    Menu(2);
+                }
+                else
+                {
+                  Menu(1);
+
+                }
             }
 
         }
@@ -1547,7 +1560,10 @@ int main()
                 MenuConfig(&status_jogo_atual);
             }
             else
-            PausaRenderer();
+            {
+               PausaRenderer();
+
+            }
         }
         if(jogoAtivo==false)
         {
