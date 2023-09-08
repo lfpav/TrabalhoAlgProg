@@ -102,8 +102,8 @@ typedef struct Status_Jogo_t
 STATUS status_jogo_atual;
 Texture2D texturaTitle;
 Texture2D spriteBomba;
-Texture2D spriteTrap;
-Texture2D spritePortal,spriteBombExpl;
+Texture2D spriteTrap,FundoMenus;
+Texture2D spritePortal,spriteBombExpl,FundoStats;
 Sound pauseSound,selectionSound;
 Sound unpauseSound,explosionSound;
 Sound dmgSound,dmgSoundEnemy,deathSoundEnemy;
@@ -694,7 +694,14 @@ void CarregaMapa(STATUS *s,int type)
 void PausaRenderer()
 {
     DrawRectangleV((Vector2){0,0}, (Vector2){900, 750}, CLITERAL(Color){ 0, 0, 0, 128 });
-    DrawRectangleV((Vector2){200,50},(Vector2){500,630},GREEN);
+    //DrawRectangleV((Vector2){200,50},(Vector2){500,630},GREEN);
+    for(int i=0;i<8;i++)
+    {
+        for(int j=0;j<10;j++)
+        {
+            DrawTextureEx(FundoMenus,(Vector2){200+(64*i),50+(64*j)},0,0.5,WHITE);
+        }
+    }
     DrawText("PAUSED",350,100,50,BLACK);
     DrawText(TextFormat("Tempo:%.1f s",tempo_atual),0,25,30,BLACK);
     DrawText(TextFormat("Vida:%d",status_jogo_atual.player.HP),0,75,30,BLACK);
@@ -756,7 +763,16 @@ void JogoRenderer(STATUS *s)
             }
         }
     }
-    DrawRectangle(0,450,900,300,RED);
+    for(int i=0;i<9;i++)
+    {
+        for(int j=0;j<3;j++)
+        {
+            DrawTextureEx(FundoStats,(Vector2){128*i,450+(128*j)},0,1,WHITE);
+
+        }
+
+
+    }
 
 }
 /* renderiza os elementos que aparecem quando o jogo esta despausado */
@@ -1161,8 +1177,15 @@ void ChecadorObjeto(OBJETO_ESTATICO objeto[MAX_OBJECTS], int *quant_objetos,int 
 void DeathScreenRenderer()
 {
     DrawRectangleV((Vector2){0,0}, (Vector2){900, 750}, CLITERAL(Color){ 0, 0, 0, 128 });
-    DrawRectangleV((Vector2){200,50},(Vector2){500,630},GREEN);
-    DrawText("VOCE MORREU",350,100,50,BLACK);
+    //DrawRectangleV((Vector2){200,50},(Vector2){500,630},GREEN);
+    for(int i=0;i<8;i++)
+    {
+        for(int j=0;j<10;j++)
+        {
+            DrawTextureEx(FundoMenus,(Vector2){200+(64*i),50+(64*j)},0,0.5,WHITE);
+        }
+    }
+    DrawText("VOCE MORREU",280,120,50,BLACK);
     DrawText("Novo Jogo - N",310,200,40*sizeMulti[0],BLACK);
     DrawText("Carregar Jogo - C",270,250,40*sizeMulti[1],BLACK);
     DrawText("Sair - Q",350,300,40*sizeMulti[2],BLACK);
@@ -1242,7 +1265,13 @@ Dependendo da tecla apertada realiza outras funcoes de manipulacao do estado do 
 void MenuConfig()
 {
     DrawRectangleV((Vector2){0,0}, (Vector2){900, 750}, CLITERAL(Color){ 0, 0, 0, 128 });
-    DrawRectangleV((Vector2){200,50},(Vector2){500,630},GREEN);
+    for(int i=0;i<8;i++)
+    {
+        for(int j=0;j<10;j++)
+        {
+            DrawTextureEx(FundoMenus,(Vector2){200+(64*i),50+(64*j)},0,0.5,WHITE);
+        }
+    }
     DrawText("PAUSED",350,100,50,BLACK);
     DrawText(TextFormat("Tempo:%.1f s",tempo_atual),0,25,30,BLACK);
     DrawText(TextFormat("Vida:%d",status_jogo_atual.player.HP),0,75,30,BLACK);
@@ -1453,9 +1482,11 @@ int main()
     explosionSound=LoadSound("./sound/explosion.mp3");
     unpauseSound = LoadSound("./sound/unpause.mp3");
     texturaTitle = LoadTexture("TitleScreen.png");
+    FundoMenus = LoadTexture("menufundo.png");
     spriteBombExpl = LoadTexture("bombsheet.png");
     spritePortal=LoadTexture("Portal.png");
     spriteBomba=LoadTexture("bomb.png");
+    FundoStats=LoadTexture("fundo.png");
     spriteTrap=LoadTexture("trap.png");
     SetSoundVolume(deathSoundEnemy,SomDosEfeitosSonoros);
     SetSoundVolume(dmgSoundEnemy,SomDosEfeitosSonoros);
