@@ -1480,7 +1480,7 @@ void Menu(int type)
     {
         CarregaJogo(&status_jogo_atual);
     }
-    if(IsKeyPressed(KEY_F) && type!=2)
+    if(IsKeyPressed(KEY_F) && type==1)
     {
         MenuConfig(&status_jogo_atual);
         PausadoConfig = true;
