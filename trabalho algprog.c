@@ -673,6 +673,13 @@ void CarregaMapa(STATUS *s,int type)
 
 
     }
+    for(int i=0;i<MAX_PROJETEIS;i++)
+    {
+        s->player.playerProj[i].ativo=false;
+        s->player.playerProj[i].airTime=3;
+        s->player.playerProj[i].bullet=(Circle){.posCenter.x=0,.posCenter.y=0,.radius=7.5};
+
+    }
     for(int i = s->armadilhasNaFase;i<MAX_OBJECTS;i++)
     {
         s->Armadilhas[i].ativo=false;
@@ -803,6 +810,15 @@ void UnpausedRenderer(STATUS *s)
 {
     DrawTextEx(fonteTitle, TextFormat("Vida:%d",status_jogo_atual.player.HP), (Vector2){50,500}, 50, 0, BLACK);
     DrawTextEx(fonteTitle, TextFormat("Vida:%d",status_jogo_atual.player.HP), (Vector2){53,503}, 50, 0, CLITERAL(Color){0,220,220,255});
+    DrawRectangle(317,512,3,206,BROWN);
+    DrawRectangle(520,512,3,206,BROWN);
+
+
+    DrawRectangle(317,512,206,3,BROWN);
+    DrawRectangle(317,715,206,3,BROWN);
+
+    DrawRectangle(320,515,200,200,CLITERAL(Color){ 0, 0, 0, 220 });
+    DrawTextureEx(sapo,(Vector2){325,500},0,3,s->player.spriteColor);
 
     DrawTextEx(fonteTitle, TextFormat("Bombas:%d",status_jogo_atual.player.bombAmount), (Vector2){50,570}, 50, 0, BLACK);
     DrawTextEx(fonteTitle, TextFormat("Bombas:%d",status_jogo_atual.player.bombAmount), (Vector2){53,573}, 50, 0, CLITERAL(Color){0,220,220,255});
