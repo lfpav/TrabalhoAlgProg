@@ -100,10 +100,10 @@ typedef struct Status_Jogo_t
 } STATUS;
 
 STATUS status_jogo_atual;
-Texture2D texturaTitle;
+Texture2D texturaTitle, texturaParede;
 Texture2D spriteBomba;
-Texture2D spriteTrap;
-Texture2D spritePortal,spriteBombExpl;
+Texture2D spriteTrap,FundoMenus, FundoJogo;
+Texture2D spritePortal,spriteBombExpl,FundoStats;
 Sound pauseSound,selectionSound;
 Sound unpauseSound,explosionSound;
 Sound dmgSound,dmgSoundEnemy,deathSoundEnemy;
@@ -120,49 +120,49 @@ Rectangle RetangulosTitle[3] = {(Rectangle)
 {.x=225,.y=650,.width=200,.height=60}};
 
 Rectangle RetangulosPausa[5] = {(Rectangle)
-{.x=300,.y=200,.width=300,.height=40},
-{.x=275,.y=250,.width=350,.height=40},
-{.x=270,.y=300,.width=390,.height=40},
-{.x=255,.y=350,.width=390,.height=40},
-{.x=340,.y=400,.width=220,.height=40}};
+{.x=300,.y=270,.width=300,.height=50},
+{.x=275,.y=330,.width=350,.height=50},
+{.x=270,.y=390,.width=390,.height=50},
+{.x=255,.y=450,.width=390,.height=50},
+{.x=340,.y=510,.width=220,.height=50}};
 
 Rectangle RetangulosDeath[3] = {(Rectangle)
-{.x=310,.y=200,.width=200,.height=40},
-{.x=350,.y=250,.width=300,.height=40},
-{.x=290,.y=300,.width=300,.height=40}};
+{.x=300,.y=315,.width=300,.height=40},
+{.x=275,.y=375,.width=350,.height=40},
+{.x=340,.y=435,.width=220,.height=40}};
 
 Rectangle RetangulosConfigMenu[2] = {(Rectangle)
-{.x=310,.y=300,.width=300,.height=40},
-{.x=340,.y=350,.width=220,.height=40}};
+{.x=290,.y=423,.width=300,.height=40},
+{.x=333,.y=483,.width=220,.height=40}};
 
 Rectangle RetangulosDeSomMusica[10] ={(Rectangle)
-{450, 250, 10, 35},
-{467, 250, 10, 35},
-{484, 250, 10, 35},
-{501, 250, 10, 35},
-{518, 250, 10, 35},
-{535, 250, 10, 35},
-{552, 250, 10, 35},
-{569, 250, 10, 35},
-{585, 250, 10, 35},
-{603, 250, 10, 35}};
+{445, 366, 20, 35},
+{462, 366, 20, 35},
+{479, 366, 20, 35},
+{496, 366, 20, 35},
+{513, 366, 20, 35},
+{530, 366, 20, 35},
+{547, 366, 20, 35},
+{564, 366, 20, 35},
+{580, 366, 20, 35},
+{597, 366, 20, 35}};
 
 Rectangle RetangulosDeEfeitoSonoro[10] ={(Rectangle)
-{450, 200, 10, 35},
-{467, 200, 10, 35},
-{484, 200, 10, 35},
-{501, 200, 10, 35},
-{518, 200, 10, 35},
-{535, 200, 10, 35},
-{552, 200, 10, 35},
-{569, 200, 10, 35},
-{585, 200, 10, 35},
-{603, 200, 10, 35}};
+{445, 306, 20, 35},
+{462, 306, 20, 35},
+{479, 306, 20, 35},
+{496, 306, 20, 35},
+{513, 306, 20, 35},
+{530, 306, 20, 35},
+{547, 306, 20, 35},
+{564, 306, 20, 35},
+{580, 306, 20, 35},
+{598, 306, 20, 35}};
 
 Color cores[2] = {WHITE, BLACK};
 bool PausadoConfig = false;
 bool GameStart = false;
-Texture2D sapo;
+Texture2D sapo, sapoVermelho;
 time_t tempo_inicio;
 float tempo_atual;
 float tempo_pausado;
@@ -568,6 +568,7 @@ Apos obter as informacoes, apaga as posicoes dos atores moveis da matriz, elas s
 void CarregaMapa(STATUS *s,int type)
 {
     char*levelName = TextFormat("mapa%d.txt",s->mapaAtual);
+
     int contadorInimigos = 0;
     //teste !!!!!!!!
     FILE* mapaLevel = fopen(levelName,"r");
@@ -693,23 +694,54 @@ void CarregaMapa(STATUS *s,int type)
 /* renderiza os elementos que devem aparecer quando o jogo esta pausado */
 void PausaRenderer()
 {
-    DrawRectangleV((Vector2){0,0}, (Vector2){900, 750}, CLITERAL(Color){ 0, 0, 0, 128 });
-    DrawRectangleV((Vector2){200,50},(Vector2){500,630},GREEN);
-    DrawText("PAUSED",350,100,50,BLACK);
-    DrawText(TextFormat("Tempo:%.1f s",tempo_atual),0,25,30,BLACK);
-    DrawText(TextFormat("Vida:%d",status_jogo_atual.player.HP),0,75,30,BLACK);
-    DrawText(TextFormat("Bombas:%d",status_jogo_atual.player.bombAmount),0,125,30,BLACK);
-    DrawText(TextFormat("Mapa atual:%d",status_jogo_atual.mapaAtual),0,175,30,BLACK);
-    DrawText(TextFormat("Inimigos:%d",status_jogo_atual.InimigosNaFase),0,225,30,BLACK);
-    DrawText("Novo Jogo - N",310,200,40*sizeMulti[0],BLACK);
-    DrawText("Salvar Jogo - S",290,250,40*sizeMulti[1],BLACK);
-    DrawText("Carregar Jogo - C",270,300,40*sizeMulti[2],BLACK);
-    DrawText("Configuracoes - O",270,350,40*sizeMulti[3],BLACK);
-    DrawText("Sair - Q",350,400,40*sizeMulti[4],BLACK);
+    DrawRectangleV((Vector2){0,0}, (Vector2){900, 750}, CLITERAL(Color){ 0, 0, 0, 175 });
+    for(int i=0;i<8;i++)
+    {
+        for(int j=0;j<8;j++)
+        {
+            DrawTextureEx(FundoMenus,(Vector2){175+(64*i),92+(64*j)}, 7, 0.8,WHITE);
+        }
+    }
+
+    DrawTextEx(fonteTitle, "PAUSADO", (Vector2){305,170}, 60, 10, BLACK);
+    DrawTextEx(fonteTitle, "PAUSADO", (Vector2){308,173}, 60, 10, WHITE);
+
+    DrawTextEx(fonteTitle, TextFormat("Tempo:%.1f s",tempo_atual), (Vector2){32,250}, 26, 0, BLACK);
+    DrawTextEx(fonteTitle, TextFormat("Tempo:%.1f s",tempo_atual), (Vector2){34,253}, 26, 0, CLITERAL(Color){0,220,220,255});
+
+    DrawTextEx(fonteTitle, TextFormat("Vida:%d",status_jogo_atual.player.HP), (Vector2){32,300}, 26, 0, BLACK);
+    DrawTextEx(fonteTitle, TextFormat("Vida:%d",status_jogo_atual.player.HP), (Vector2){34,303}, 26, 0, CLITERAL(Color){0,220,220,255});
+
+    DrawTextEx(fonteTitle, TextFormat("Bombas:%d",status_jogo_atual.player.bombAmount), (Vector2){32,350}, 26, 0, BLACK);
+    DrawTextEx(fonteTitle, TextFormat("Bombas:%d",status_jogo_atual.player.bombAmount), (Vector2){34,353}, 26, 0, CLITERAL(Color){0,220,220,255});
+
+    DrawTextEx(fonteTitle, TextFormat("Mapa atual:%d",status_jogo_atual.mapaAtual), (Vector2){30,400}, 26, 0, BLACK);
+    DrawTextEx(fonteTitle, TextFormat("Mapa atual:%d",status_jogo_atual.mapaAtual), (Vector2){32,402}, 26, 0, CLITERAL(Color){0,220,220,255});
+
+    DrawTextEx(fonteTitle, TextFormat("Inimigos:%d",status_jogo_atual.InimigosNaFase), (Vector2){32,450}, 26, 0, BLACK);
+    DrawTextEx(fonteTitle, TextFormat("Inimigos:%d",status_jogo_atual.InimigosNaFase), (Vector2){34,453}, 26, 0, CLITERAL(Color){0,220,220,255});
+
+
+    DrawTextEx(fonteTitle, "Novo Jogo - N", (Vector2){310,270}, 45*sizeMulti[0], 0, BLACK);
+    DrawTextEx(fonteTitle, "Novo Jogo - N", (Vector2){313,273}, 45*sizeMulti[0], 0, CLITERAL(Color){0,220,220,255});
+
+
+    DrawTextEx(fonteTitle, "Salvar Jogo - S", (Vector2){305,330}, 45*sizeMulti[1], 0, BLACK);
+    DrawTextEx(fonteTitle, "Salvar Jogo - S", (Vector2){308,333}, 45*sizeMulti[1], 0, CLITERAL(Color){0,220,220,255});
+
+    DrawTextEx(fonteTitle, "Carregar Jogo - C", (Vector2){280,390}, 45*sizeMulti[2], 0, BLACK);
+    DrawTextEx(fonteTitle, "Carregar Jogo - C", (Vector2){283,393}, 45*sizeMulti[2], 0, CLITERAL(Color){0,220,220,255});
+
+    DrawTextEx(fonteTitle, "Configuracoes - F", (Vector2){280,450}, 45*sizeMulti[3], 0, BLACK);
+    DrawTextEx(fonteTitle, "Configuracoes - F", (Vector2){283,453}, 45*sizeMulti[3], 0, CLITERAL(Color){0,220,220,255});
+
+    DrawTextEx(fonteTitle, "Sair - Q", (Vector2){380,510}, 45*sizeMulti[4], 0, BLACK);
+    DrawTextEx(fonteTitle, "Sair - Q", (Vector2){383,513}, 45*sizeMulti[4], 0, CLITERAL(Color){0,220,220,255});
+
       for(int iPausa=0;iPausa<5;iPausa++)
     {
         float firstSize = sizeMulti[iPausa];
-        DrawRectangle(RetangulosPausa[iPausa].x,RetangulosPausa[iPausa].y,RetangulosPausa[iPausa].width,RetangulosPausa[iPausa].height,BLANK);
+        DrawRectangle(RetangulosPausa[iPausa].x,RetangulosPausa[iPausa].y,RetangulosPausa[iPausa].width,RetangulosPausa[iPausa].height, BLANK);
         if(CheckCollisionPointRec(GetMousePosition(),RetangulosPausa[iPausa]))
         {
             sizeMulti[iPausa]=1.25;
@@ -730,8 +762,7 @@ void PausaRenderer()
 void JogoRenderer(STATUS *s)
 {
     s->player.playerRec = (Rectangle){.x=s->player.posplayer.x,.y=s->player.posplayer.y,.width=30,.height=30};
-    DrawRectangleRec(s->player.playerRec,GREEN);
-    //DrawRectangleV(s->player.posplayer,(Vector2){30,30},GREEN);
+    DrawRectangleRec(s->player.playerRec,BLANK);
     if(s->player.TomouDano)
     {
         s->player.flash_Duration-=GetFrameTime();
@@ -756,19 +787,34 @@ void JogoRenderer(STATUS *s)
             }
         }
     }
-    DrawRectangle(0,450,900,300,RED);
+    for(int i=0;i<9;i++)
+    {
+        for(int j=0;j<3;j++)
+        {
+            DrawTextureEx(FundoStats,(Vector2){128*i,450+(128*j)},0,1,WHITE);
+        }
+
+
+    }
 
 }
 /* renderiza os elementos que aparecem quando o jogo esta despausado */
 void UnpausedRenderer(STATUS *s)
 {
-    DrawText(TextFormat("Tempo:%.1f s",tempo_atual),0,500,50,BLACK);
-    DrawText(TextFormat("Vida:%d",status_jogo_atual.player.HP),0,550,50,BLACK);
-    DrawText(TextFormat("Bombas:%d",status_jogo_atual.player.bombAmount),0,600,50,BLACK);
-    DrawText(TextFormat("Pontos:%d",status_jogo_atual.pontuacao),0,650,50,BLACK);
-    DrawText(TextFormat("Mapa atual:%d",status_jogo_atual.mapaAtual),0,450,50,BLACK);
-    DrawText(TextFormat("Inimigos:%d",status_jogo_atual.InimigosNaFase),0,700,50,BLACK);
+    DrawTextEx(fonteTitle, TextFormat("Vida:%d",status_jogo_atual.player.HP), (Vector2){50,500}, 50, 0, BLACK);
+    DrawTextEx(fonteTitle, TextFormat("Vida:%d",status_jogo_atual.player.HP), (Vector2){53,503}, 50, 0, CLITERAL(Color){0,220,220,255});
 
+    DrawTextEx(fonteTitle, TextFormat("Bombas:%d",status_jogo_atual.player.bombAmount), (Vector2){50,570}, 50, 0, BLACK);
+    DrawTextEx(fonteTitle, TextFormat("Bombas:%d",status_jogo_atual.player.bombAmount), (Vector2){53,573}, 50, 0, CLITERAL(Color){0,220,220,255});
+
+    DrawTextEx(fonteTitle, TextFormat("Inimigos:%d",status_jogo_atual.InimigosNaFase), (Vector2){50,640}, 50, 0, BLACK);
+    DrawTextEx(fonteTitle, TextFormat("Inimigos:%d",status_jogo_atual.InimigosNaFase), (Vector2){53,643}, 50, 0, CLITERAL(Color){0,220,220,255});
+
+    DrawTextEx(fonteTitle, TextFormat("Mapa atual:%d",status_jogo_atual.mapaAtual), (Vector2){600,500}, 50, 0, BLACK);
+    DrawTextEx(fonteTitle, TextFormat("Mapa atual:%d",status_jogo_atual.mapaAtual), (Vector2){603,503}, 50, 0, CLITERAL(Color){0,220,220,255});
+
+    DrawTextEx(fonteTitle, TextFormat("Tempo:%.1f s",tempo_atual), (Vector2){600,570}, 50, 0, BLACK);
+    DrawTextEx(fonteTitle, TextFormat("Tempo:%.1f s",tempo_atual), (Vector2){603,573}, 50, 0, CLITERAL(Color){0,220,220,255});
 }
 /* A funcao NovoJogo recebe um struct STATUS, criado ao inicializar o jogo, que armazena as principais informacos sobre o jogo, e confere a ele os valores padrao de um novo jogo,
 tambem coloca a bool GameStart como true, para o jogo sair do menu principal e comecar */
@@ -849,12 +895,10 @@ void LimpadorProjetil(PROJETIL *projetil)
     }
 
 
-
 }
 void RenderizaProjeteis(PROJETIL projetil)
 {
     DrawCircle(projetil.bullet.posCenter.x,projetil.bullet.posCenter.y,projetil.bullet.radius,RED);
-
 }
 
 void TakeDmgEnemy(INIMIGO *inim)
@@ -928,12 +972,13 @@ void InimigoRenderer(INIMIGO *inim)
             if(inim->flash_Duration<=0)
             {
                 inim->TomouDano=false;
-                inim->spriteColor=PURPLE;
+                inim->spriteColor=WHITE;
                 inim->flash_Duration=0.3;
             }
         }
         inim->inimigoRec = (Rectangle){.x=inim->posInimigo.x,.y=inim->posInimigo.y,.width=30,.height=30};
-        DrawRectangleRec(inim->inimigoRec,inim->spriteColor);
+        DrawRectangleRec(inim->inimigoRec,BLANK);
+        DrawTextureEx(sapoVermelho,(Vector2){inim->posInimigo.x-15,inim->posInimigo.y-15},0,1,inim->spriteColor);
 
 }
 void ChecadorInimigos(INIMIGO inimigo[MAX_INIMIGOS])
@@ -1160,16 +1205,34 @@ void ChecadorObjeto(OBJETO_ESTATICO objeto[MAX_OBJECTS], int *quant_objetos,int 
 /* renderiza as informacoes que devem ser mostrada na tela de game over */
 void DeathScreenRenderer()
 {
-    DrawRectangleV((Vector2){0,0}, (Vector2){900, 750}, CLITERAL(Color){ 0, 0, 0, 128 });
-    DrawRectangleV((Vector2){200,50},(Vector2){500,630},GREEN);
-    DrawText("VOCE MORREU",350,100,50,BLACK);
-    DrawText("Novo Jogo - N",310,200,40*sizeMulti[0],BLACK);
-    DrawText("Carregar Jogo - C",270,250,40*sizeMulti[1],BLACK);
-    DrawText("Sair - Q",350,300,40*sizeMulti[2],BLACK);
+    DrawRectangle(0,0,900,700,CLITERAL(Color){200, 200, 180, 160});
+    DrawRectangleV((Vector2){0,0}, (Vector2){900, 750}, CLITERAL(Color){ 0, 0, 0, 190 });
+    for(int i=0;i<8;i++)
+    {
+        for(int j=0;j<6;j++)
+        {
+            DrawTextureEx(FundoMenus,(Vector2){175+(64*i),156+(64*j)},5.5,0.8,WHITE);
+        }
+    }
+
+  //  DrawText("VOCE MORREU",280,120,50,BLACK);
+
+    DrawTextEx(fonteTitle, "VOCE MORREU", (Vector2){270,212}, 60, 5, BLACK);
+    DrawTextEx(fonteTitle, "VOCE MORREU", (Vector2){273,215}, 60, 5, WHITE);
+
+    DrawTextEx(fonteTitle, "Novo Jogo - N", (Vector2){310,312}, 45*sizeMulti[0], 0, BLACK);
+    DrawTextEx(fonteTitle, "Novo Jogo - N", (Vector2){313,315}, 45*sizeMulti[0], 0, CLITERAL(Color){0,220,220,255});
+
+    DrawTextEx(fonteTitle, "Carregar Jogo - C", (Vector2){280,372}, 45*sizeMulti[1], 0, BLACK);
+    DrawTextEx(fonteTitle, "Carregar Jogo - C", (Vector2){283,375}, 45*sizeMulti[1], 0, CLITERAL(Color){0,220,220,255});
+
+    DrawTextEx(fonteTitle, "Sair - Q", (Vector2){380,432}, 45*sizeMulti[2], 0, BLACK);
+    DrawTextEx(fonteTitle, "Sair - Q", (Vector2){383,435}, 45*sizeMulti[2], 0, CLITERAL(Color){0,220,220,255});
+
     for(int iDeath=0;iDeath<3;iDeath++)
     {
         float firstSize = sizeMulti[iDeath];
-        DrawRectangle(RetangulosDeath[iDeath].x,RetangulosDeath[iDeath].y,RetangulosDeath[iDeath].width,RetangulosDeath[iDeath].height,BLANK);
+        DrawRectangle(RetangulosDeath[iDeath].x,RetangulosDeath[iDeath].y,RetangulosDeath[iDeath].width,RetangulosDeath[iDeath].height, BLANK);
         if(CheckCollisionPointRec(GetMousePosition(),RetangulosDeath[iDeath]))
         {
             sizeMulti[iDeath]=1.25;
@@ -1242,17 +1305,44 @@ Dependendo da tecla apertada realiza outras funcoes de manipulacao do estado do 
 void MenuConfig()
 {
     DrawRectangleV((Vector2){0,0}, (Vector2){900, 750}, CLITERAL(Color){ 0, 0, 0, 128 });
-    DrawRectangleV((Vector2){200,50},(Vector2){500,630},GREEN);
-    DrawText("PAUSED",350,100,50,BLACK);
-    DrawText(TextFormat("Tempo:%.1f s",tempo_atual),0,25,30,BLACK);
-    DrawText(TextFormat("Vida:%d",status_jogo_atual.player.HP),0,75,30,BLACK);
-    DrawText(TextFormat("Bombas:%d",status_jogo_atual.player.bombAmount),0,125,30,BLACK);
-    DrawText(TextFormat("Mapa atual:%d",status_jogo_atual.mapaAtual),0,175,30,BLACK);
-    DrawText(TextFormat("Inimigos:%d",status_jogo_atual.InimigosNaFase),0,225,30,BLACK);
-    DrawText("SFX",310,200,40*sizeMulti[0],BLACK);
-    DrawText("Musica",250,250,40*sizeMulti[1],BLACK);
-    DrawText("Tela Cheia - F",310,300,40*sizeMulti[2],BLACK);
-    DrawText("Voltar - Z",340,350,40*sizeMulti[3],BLACK);
+    for(int i=0;i<8;i++)
+    {
+        for(int j=0;j<7;j++)
+        {
+            DrawTextureEx(FundoMenus,(Vector2){175+(64*i),124+(64*j)},7,0.8,WHITE);
+        }
+    }
+
+    DrawTextEx(fonteTitle, "PAUSADO", (Vector2){305,202}, 60, 10, BLACK);
+    DrawTextEx(fonteTitle, "PAUSADO", (Vector2){308,205}, 60, 10, WHITE);
+
+    DrawTextEx(fonteTitle, TextFormat("Tempo:%.1f s",tempo_atual), (Vector2){32,250}, 26, 0, BLACK);
+    DrawTextEx(fonteTitle, TextFormat("Tempo:%.1f s",tempo_atual), (Vector2){34,253}, 26, 0, CLITERAL(Color){0,220,220,255});
+
+    DrawTextEx(fonteTitle, TextFormat("Vida:%d",status_jogo_atual.player.HP), (Vector2){32,300}, 26, 0, BLACK);
+    DrawTextEx(fonteTitle, TextFormat("Vida:%d",status_jogo_atual.player.HP), (Vector2){34,303}, 26, 0, CLITERAL(Color){0,220,220,255});
+
+    DrawTextEx(fonteTitle, TextFormat("Bombas:%d",status_jogo_atual.player.bombAmount), (Vector2){32,350}, 26, 0, BLACK);
+    DrawTextEx(fonteTitle, TextFormat("Bombas:%d",status_jogo_atual.player.bombAmount), (Vector2){34,353}, 26, 0, CLITERAL(Color){0,220,220,255});
+
+    DrawTextEx(fonteTitle, TextFormat("Mapa atual:%d",status_jogo_atual.mapaAtual), (Vector2){30,400}, 26, 0, BLACK);
+    DrawTextEx(fonteTitle, TextFormat("Mapa atual:%d",status_jogo_atual.mapaAtual), (Vector2){32,402}, 26, 0, CLITERAL(Color){0,220,220,255});
+
+    DrawTextEx(fonteTitle, TextFormat("Inimigos:%d",status_jogo_atual.InimigosNaFase), (Vector2){32,450}, 26, 0, BLACK);
+    DrawTextEx(fonteTitle, TextFormat("Inimigos:%d",status_jogo_atual.InimigosNaFase), (Vector2){34,453}, 26, 0, CLITERAL(Color){0,220,220,255});
+
+
+    DrawTextEx(fonteTitle, "SFX", (Vector2){340,302}, 45*sizeMulti[0], 0, BLACK);
+    DrawTextEx(fonteTitle, "SFX", (Vector2){343,305}, 45*sizeMulti[0], 0, CLITERAL(Color){0,220,220,255});
+
+    DrawTextEx(fonteTitle, "Musica", (Vector2){310,362}, 45*sizeMulti[1], 0, BLACK);
+    DrawTextEx(fonteTitle, "Musica", (Vector2){313,365}, 45*sizeMulti[1], 0, CLITERAL(Color){0,220,220,255});
+
+    DrawTextEx(fonteTitle, "Tela Cheia - F", (Vector2){310,422}, 45*sizeMulti[2], 0, BLACK);
+    DrawTextEx(fonteTitle, "Tela Cheia - F", (Vector2){313,425}, 45*sizeMulti[2], 0, CLITERAL(Color){0,220,220,255});
+
+    DrawTextEx(fonteTitle, "Voltar - Z", (Vector2){347,482}, 45*sizeMulti[3], 0, BLACK);
+    DrawTextEx(fonteTitle, "Voltar - Z", (Vector2){350,485}, 45*sizeMulti[3], 0, CLITERAL(Color){0,220,220,255});
 
 
      for(int iConfig=0;iConfig<2;iConfig++)
@@ -1275,8 +1365,8 @@ void MenuConfig()
         for(int iSom=0;iSom<10;iSom++)
         {
             float firstSize = sizeMulti[iSom];
-            DrawRectangle(RetangulosDeSomMusica[iSom].x, RetangulosDeSomMusica[iSom].y, RetangulosDeSomMusica[iSom].width, RetangulosDeSomMusica[iSom].height, cores[1]);
-            DrawRectangle(RetangulosDeEfeitoSonoro[iSom].x, RetangulosDeEfeitoSonoro[iSom].y, RetangulosDeEfeitoSonoro[iSom].width, RetangulosDeEfeitoSonoro[iSom].height, cores[1]);
+            DrawRectangle(RetangulosDeSomMusica[iSom].x+5, RetangulosDeSomMusica[iSom].y, RetangulosDeSomMusica[iSom].width-10, RetangulosDeSomMusica[iSom].height, cores[1]);
+            DrawRectangle(RetangulosDeEfeitoSonoro[iSom].x+5, RetangulosDeEfeitoSonoro[iSom].y, RetangulosDeEfeitoSonoro[iSom].width-10, RetangulosDeEfeitoSonoro[iSom].height, cores[1]);
 
             if(CheckCollisionPointRec(GetMousePosition(),RetangulosDeSomMusica[iSom]))
             {
@@ -1300,11 +1390,11 @@ void MenuConfig()
             int sfx = (int)(SomDosEfeitosSonoros/0.25);
             for(int i = 0; i<=m;i++)
             {
-                DrawRectangle(RetangulosDeSomMusica[i].x+1.5, RetangulosDeSomMusica[i].y+1.5, RetangulosDeSomMusica[i].width-3, RetangulosDeSomMusica[i].height-3, cores[0]);
+                DrawRectangle(RetangulosDeSomMusica[i].x+6.5, RetangulosDeSomMusica[i].y+1.5, RetangulosDeSomMusica[i].width-13, RetangulosDeSomMusica[i].height-3, cores[0]);
             }
             for(int k = 0; k<=sfx;k++)
             {
-                DrawRectangle(RetangulosDeEfeitoSonoro[k].x+1.5, RetangulosDeEfeitoSonoro[k].y+1.5, RetangulosDeEfeitoSonoro[k].width-3, RetangulosDeEfeitoSonoro[k].height-3, cores[0]);
+                DrawRectangle(RetangulosDeEfeitoSonoro[k].x+6.5, RetangulosDeEfeitoSonoro[k].y+1.5, RetangulosDeEfeitoSonoro[k].width-13, RetangulosDeEfeitoSonoro[k].height-3, cores[0]);
             }
 
 }
@@ -1390,7 +1480,7 @@ void Menu(int type)
     {
         CarregaJogo(&status_jogo_atual);
     }
-    if(IsKeyPressed(KEY_O) && type!=2)
+    if(IsKeyPressed(KEY_F) && type!=2)
     {
         MenuConfig(&status_jogo_atual);
         PausadoConfig = true;
@@ -1453,9 +1543,11 @@ int main()
     explosionSound=LoadSound("./sound/explosion.mp3");
     unpauseSound = LoadSound("./sound/unpause.mp3");
     texturaTitle = LoadTexture("TitleScreen.png");
+    FundoMenus = LoadTexture("Grass_08-128x128.png");
     spriteBombExpl = LoadTexture("bombsheet.png");
     spritePortal=LoadTexture("Portal.png");
     spriteBomba=LoadTexture("bomb.png");
+    FundoStats=LoadTexture("fundo.png");
     spriteTrap=LoadTexture("trap.png");
     SetSoundVolume(deathSoundEnemy,SomDosEfeitosSonoros);
     SetSoundVolume(dmgSoundEnemy,SomDosEfeitosSonoros);
@@ -1467,6 +1559,7 @@ int main()
     SetSoundVolume(titleTheme,SomDaMusica); //SOUND VOLUME EH FLOAT ENTRE 0 E 1, SE BOTAR MAIS Q ISSO VAI ESTOURAR TEUS OUVIDO
     fonteTitle = LoadFontEx("SunnyspellsRegular-MV9ze.otf",75,NULL,0);
     sapo=LoadTexture("sapo.png");
+    sapoVermelho=LoadTexture("sapoVermelho.png");
     SetExitKey(KEY_Q);
     status_jogo_atual.player.TomouDano=false;
     status_jogo_atual.player.spriteColor=WHITE;
@@ -1474,7 +1567,7 @@ int main()
     status_jogo_atual.player.vivo = true;
     for(int i =0;i<MAX_INIMIGOS;i++)
      {
-         status_jogo_atual.Inimigos[i].spriteColor=PURPLE;
+         status_jogo_atual.Inimigos[i].spriteColor=WHITE;
          status_jogo_atual.Inimigos[i].TomouDano=false;
          status_jogo_atual.Inimigos[i].flash_Duration=0.3;
 
@@ -1490,10 +1583,17 @@ int main()
             TitleScreen();
             tempo_inicio=time(NULL);
             EndDrawing();
-
         }
         if(status_jogo_atual.player.vivo&&jogoAtivo)
         {
+  /*  for(int i=0;i<8;i++)
+    {
+        for(int j=0;j<8;j++)
+        {
+            DrawTextureEx(FundoJogo,(Vector2){64*i,64*j}, 0, 0.5,WHITE);
+        }
+    } */
+    DrawRectangle(0,0,900,700,CLITERAL(Color){200, 200, 180, 255});
             if(IsKeyPressed(KEY_ESCAPE))
             {
                 if(Pausado)
