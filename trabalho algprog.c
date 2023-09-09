@@ -102,15 +102,9 @@ typedef struct Status_Jogo_t
 } STATUS;
 
 STATUS status_jogo_atual;
-<<<<<<< Updated upstream
 Texture2D texturaTitle,texturaParede;
 Texture2D spriteBomba;
 Texture2D spriteTrap,FundoMenus,FundoJogo;
-=======
-Texture2D texturaTitle, texturaParede;
-Texture2D spriteBomba;
-Texture2D spriteTrap,FundoMenus, FundoJogo;
->>>>>>> Stashed changes
 Texture2D spritePortal,spriteBombExpl,FundoStats;
 Sound pauseSound,selectionSound;
 Sound unpauseSound,explosionSound;
@@ -170,11 +164,7 @@ Rectangle RetangulosDeEfeitoSonoro[10] ={(Rectangle)
 Color cores[2] = {WHITE, BLACK};
 bool PausadoConfig = false;
 bool GameStart = false;
-<<<<<<< Updated upstream
 Texture2D sapo,sapoVermelho;
-=======
-Texture2D sapo, sapoVermelho;
->>>>>>> Stashed changes
 time_t tempo_inicio;
 float tempo_atual;
 float tempo_pausado;
@@ -582,7 +572,6 @@ Apos obter as informacoes, apaga as posicoes dos atores moveis da matriz, elas s
 void CarregaMapa(STATUS *s,int type)
 {
     char*levelName = TextFormat("mapa%d.txt",s->mapaAtual);
-
     int contadorInimigos = 0;
     //teste !!!!!!!!
     FILE* mapaLevel = fopen(levelName,"r");
@@ -906,15 +895,12 @@ void LimpadorProjetil(PROJETIL *projetil)
     }
 
 
+
 }
 void RenderizaProjeteis(PROJETIL projetil)
 {
-<<<<<<< Updated upstream
     DrawCircle(projetil.bullet.posCenter.x,projetil.bullet.posCenter.y,projetil.bullet.radius,LIGHT_BLUE);
 
-=======
-    DrawCircle(projetil.bullet.posCenter.x,projetil.bullet.posCenter.y,projetil.bullet.radius,RED);
->>>>>>> Stashed changes
 }
 
 void TakeDmgEnemy(INIMIGO *inim)
@@ -993,11 +979,7 @@ void InimigoRenderer(INIMIGO *inim)
             }
         }
         inim->inimigoRec = (Rectangle){.x=inim->posInimigo.x,.y=inim->posInimigo.y,.width=30,.height=30};
-<<<<<<< Updated upstream
          DrawRectangleRec(inim->inimigoRec,BLANK);
-=======
-        DrawRectangleRec(inim->inimigoRec,BLANK);
->>>>>>> Stashed changes
         DrawTextureEx(sapoVermelho,(Vector2){inim->posInimigo.x-15,inim->posInimigo.y-15},0,1,inim->spriteColor);
 
 }
@@ -1499,11 +1481,7 @@ void Menu(int type)
     {
         CarregaJogo(&status_jogo_atual);
     }
-<<<<<<< Updated upstream
     if(IsKeyPressed(KEY_F) && type==1)
-=======
-    if(IsKeyPressed(KEY_F) && type!=2)
->>>>>>> Stashed changes
     {
         MenuConfig(&status_jogo_atual);
         PausadoConfig = true;
@@ -1622,7 +1600,6 @@ int main()
     SetSoundVolume(titleTheme,SomDaMusica); //SOUND VOLUME EH FLOAT ENTRE 0 E 1, SE BOTAR MAIS Q ISSO VAI ESTOURAR TEUS OUVIDO
     fonteTitle = LoadFontEx("SunnyspellsRegular-MV9ze.otf",75,NULL,0);
     sapo=LoadTexture("sapo.png");
-    sapoVermelho=LoadTexture("sapoVermelho.png");
     SetExitKey(KEY_Q);
     status_jogo_atual.player.TomouDano=false;
     status_jogo_atual.player.spriteColor=WHITE;
@@ -1646,21 +1623,11 @@ int main()
             TitleScreen();
             tempo_inicio=time(NULL);
             EndDrawing();
+
         }
         if(status_jogo_atual.player.vivo&&jogoAtivo)
         {
-<<<<<<< Updated upstream
             DrawRectangle(0,0,900,700,CLITERAL(Color){200, 200, 180, 255});
-=======
-  /*  for(int i=0;i<8;i++)
-    {
-        for(int j=0;j<8;j++)
-        {
-            DrawTextureEx(FundoJogo,(Vector2){64*i,64*j}, 0, 0.5,WHITE);
-        }
-    } */
-    DrawRectangle(0,0,900,700,CLITERAL(Color){200, 200, 180, 255});
->>>>>>> Stashed changes
             if(IsKeyPressed(KEY_ESCAPE))
             {
                 if(Pausado)
