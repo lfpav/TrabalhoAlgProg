@@ -850,7 +850,8 @@ void JogoRenderer(STATUS *s)
         {
             if(s->CurrentLevelMatrix[i][j]=='#')
             {
-                DrawRectangle(j*15,i*15,15,15,BROWN);
+                //DrawRectangle(j*15,i*15,15,15,BROWN);
+                DrawTextureEx(texturaParede,(Vector2){j*15,i*15},0,1,WHITE);
             }
         }
     }
@@ -892,8 +893,8 @@ void UnpausedRenderer(STATUS *s)
 
     DrawTextEx(fonteTitle, TextFormat("Tempo:%.1f s",tempo_atual), (Vector2){600,570}, 50, 0, BLACK);
     DrawTextEx(fonteTitle, TextFormat("Tempo:%.1f s",tempo_atual), (Vector2){603,573}, 50, 0, CLITERAL(Color){0,220,220,255});
-    DrawTextEx(fonteTitle, TextFormat("Pontuacao:%d ",status_jogo_atual.pontuacao), (Vector2){600,640}, 50, 0, BLACK);
-    DrawTextEx(fonteTitle, TextFormat("Pontuacao:%d ",status_jogo_atual.pontuacao), (Vector2){603,643}, 50, 0, CLITERAL(Color){0,220,220,255});
+    DrawTextEx(fonteTitle, TextFormat("Pontos:%d ",status_jogo_atual.pontuacao), (Vector2){600,640}, 50, 0, BLACK);
+    DrawTextEx(fonteTitle, TextFormat("Pontos:%d ",status_jogo_atual.pontuacao), (Vector2){603,643}, 50, 0, CLITERAL(Color){0,220,220,255});
 
 }
 /* A funcao NovoJogo recebe um struct STATUS, criado ao inicializar o jogo, que armazena as principais informacos sobre o jogo, e confere a ele os valores padrao de um novo jogo,
@@ -1096,7 +1097,7 @@ void ChecadorInimigos(INIMIGO inimigo[MAX_INIMIGOS])
 void ObjetoRenderer(OBJETO_ESTATICO *objeto)
 {
     objeto->objetoRec = (Rectangle){.x=objeto->posObjeto.x,.y=objeto->posObjeto.y,.width=30,.height=30};
-    DrawTextureEx(objeto->spriteObjeto,objeto->posObjeto,0,0.5,WHITE);
+    DrawTextureEx(objeto->spriteObjeto,objeto->posObjeto,0,0.6,WHITE);
 }
 void ObjetoRendererPro(OBJETO_ESTATICO *objeto)
 {
@@ -1678,6 +1679,7 @@ int main()
     spritePortal=LoadTexture("Portal.png");
     spriteBomba=LoadTexture("bomb.png");
     FundoStats=LoadTexture("fundo.png");
+    texturaParede=LoadTexture("paredinha.png");
     sapoVermelho=LoadTexture("sapoVermelho.png");
     spriteTrap=LoadTexture("trap.png");
     sapoDmg01=LoadTexture("sapoTodoCoitado01.png");
@@ -1716,7 +1718,8 @@ int main()
             if(!IsSoundPlaying(titleTheme))
             PlaySound(titleTheme);
             BeginDrawing();
-            ClearBackground(WHITE);
+            //ClearBackground(WHITE);
+            ClearBackground(CLITERAL(Color){200, 200, 180, 255});
             TitleScreen();
             tempo_inicio=time(NULL);
             EndDrawing();
@@ -1724,7 +1727,7 @@ int main()
         }
         if(status_jogo_atual.player.vivo&&jogoAtivo)
         {
-            DrawRectangle(0,0,900,700,CLITERAL(Color){200, 200, 180, 255});
+            //DrawRectangle(0,0,900,700,CLITERAL(Color){200, 200, 180, 255});
             if(IsKeyPressed(KEY_ESCAPE))
             {
                 if(Pausado)
@@ -1782,7 +1785,8 @@ int main()
         }
 
         BeginDrawing();
-        ClearBackground(WHITE);
+        //ClearBackground(WHITE);
+        ClearBackground(CLITERAL(Color){200, 200, 180, 255});
         JogoRenderer(&status_jogo_atual);
         if(!Pausado)UnpausedRenderer(&status_jogo_atual);
           if(Pausado)
