@@ -106,6 +106,7 @@ Texture2D texturaTitle,texturaParede;
 Texture2D spriteBomba;
 Texture2D spriteTrap,FundoMenus,FundoJogo;
 Texture2D spritePortal,spriteBombExpl,FundoStats;
+Texture2D sapoLoco,sapoRight,sapoLeft,sapoDmg01,sapoDmg02,sapoDmg03,sapoDmg04;
 Sound pauseSound,selectionSound;
 Sound unpauseSound,explosionSound;
 Sound dmgSound,dmgSoundEnemy,deathSoundEnemy;
@@ -353,7 +354,7 @@ void inimigoPerseguePlayer(INIMIGO *Inim_ptr, PLAYER *p,float *tempo_i_chase)
          Norm = Vector2Normalize(not_Norm);
          atualDir.x = Inim_ptr->dirInimigo.x;
          atualDir.y = Inim_ptr->dirInimigo.y;
-         Inim_ptr->speed=0.25*(5+rand()%8);
+         Inim_ptr->speed=0.25*(7+rand()%6);
          if(fabs(not_Norm.x)>30 )
          {
             Inim_ptr->dirInimigo.x = Norm.x;
@@ -376,11 +377,26 @@ void inimigoPerseguePlayer(INIMIGO *Inim_ptr, PLAYER *p,float *tempo_i_chase)
         Inim_ptr->posInimigo.x+=Inim_ptr->dirInimigo.x*Inim_ptr->speed;
 
     }
+    else
+    {
+        Inim_ptr->dirInimigo.x*=-1;
+        *tempo_i_chase=0.1*(2+rand()%3);
+
+
+    }
     newPos.y = Inim_ptr->dirInimigo.y*Inim_ptr->speed+Inim_ptr->posInimigo.y;
     newPos.x = Inim_ptr->posInimigo.x;
      if(PodeMoverY(Inim_ptr->dirInimigo,Inim_ptr->posInimigo,newPos))
     {
         Inim_ptr->posInimigo.y+=Inim_ptr->dirInimigo.y*Inim_ptr->speed;
+
+    }
+    else
+    {
+        Inim_ptr->dirInimigo.y*=-1;
+        *tempo_i_chase=0.1*(2+rand()%3);
+
+
 
     }
 
@@ -623,6 +639,7 @@ void CarregaMapa(STATUS *s,int type)
                     s->Inimigos[s->InimigosNaFase].ativo = true;
                     s->Inimigos[s->InimigosNaFase].TomouDano = false;
                     s->Inimigos[s->InimigosNaFase].speed = 2;
+                    s->Inimigos[s->InimigosNaFase].spriteColor = WHITE;
                     s->Inimigos[s->InimigosNaFase].flash_Duration=0.3;
                     gerarDirecaoAleatoria(&s->Inimigos[s->InimigosNaFase].dirInimigo);
                     s->CurrentLevelMatrix[iMap][jMap]='\0';
@@ -731,6 +748,8 @@ void PausaRenderer()
 
     DrawTextEx(fonteTitle, TextFormat("Inimigos:%d",status_jogo_atual.InimigosNaFase), (Vector2){32,450}, 26, 0, BLACK);
     DrawTextEx(fonteTitle, TextFormat("Inimigos:%d",status_jogo_atual.InimigosNaFase), (Vector2){34,453}, 26, 0, CLITERAL(Color){0,220,220,255});
+    DrawTextEx(fonteTitle, TextFormat("Pontuacao:%d ",status_jogo_atual.pontuacao), (Vector2){32,500}, 26, 0, BLACK);
+    DrawTextEx(fonteTitle, TextFormat("Pontuacao:%d ",status_jogo_atual.pontuacao), (Vector2){34,503}, 26, 0, CLITERAL(Color){0,220,220,255});
 
 
     DrawTextEx(fonteTitle, "Novo Jogo - N", (Vector2){310,270}, 45*sizeMulti[0], 0, BLACK);
@@ -768,6 +787,47 @@ void PausaRenderer()
     }
 }
 /* A funcao JogoRenderer desenha os elementos do jogo na tela */
+void RenderizaSapo(Vector2 pos,int scale)
+{
+    if(status_jogo_atual.player.bombAmount>=5 && status_jogo_atual.player.HP>=3)
+    {
+        DrawTextureEx(sapoLoco,pos,0,scale,status_jogo_atual.player.spriteColor);
+    }
+    if(status_jogo_atual.player.HP>=4&&status_jogo_atual.player.bombAmount<5)
+    {
+        if((int)tempo_atual%2==0)
+        {
+          DrawTextureEx(sapoRight,pos,0,scale,status_jogo_atual.player.spriteColor);
+
+        }
+        else if((int)tempo_atual%3==0)
+        {
+            DrawTextureEx(sapo,pos,0,scale,status_jogo_atual.player.spriteColor);
+        }
+        else
+        {
+            DrawTextureEx(sapoLeft,pos,0,scale,status_jogo_atual.player.spriteColor);
+        }
+
+    }
+    else if(status_jogo_atual.player.HP==3)
+    {
+         DrawTextureEx(sapoDmg01,pos,0,scale,status_jogo_atual.player.spriteColor);
+
+    }
+    else if(status_jogo_atual.player.HP==2)
+    {
+         DrawTextureEx(sapoDmg02,pos,0,scale,status_jogo_atual.player.spriteColor);
+
+    }
+     else if(status_jogo_atual.player.HP==1)
+    {
+         DrawTextureEx(sapoDmg04,pos,0,scale,status_jogo_atual.player.spriteColor);
+
+    }
+
+
+}
 void JogoRenderer(STATUS *s)
 {
     s->player.playerRec = (Rectangle){.x=s->player.posplayer.x,.y=s->player.posplayer.y,.width=30,.height=30};
@@ -783,7 +843,7 @@ void JogoRenderer(STATUS *s)
             s->player.flash_Duration=0.3;
         }
     }
-    DrawTextureEx(sapo,(Vector2){s->player.posplayer.x-15,s->player.posplayer.y-15},0,1,s->player.spriteColor);
+    RenderizaSapo((Vector2){.x=s->player.posplayer.x-15,.y=s->player.posplayer.y-15},1);
     for(int i=0; i<MAPLINES; i++)
     {
         for(int j=0; j<MAPCOLUMNS; j++)
@@ -806,6 +866,7 @@ void JogoRenderer(STATUS *s)
 
 }
 /* renderiza os elementos que aparecem quando o jogo esta despausado */
+
 void UnpausedRenderer(STATUS *s)
 {
     DrawTextEx(fonteTitle, TextFormat("Vida:%d",status_jogo_atual.player.HP), (Vector2){50,500}, 50, 0, BLACK);
@@ -818,7 +879,7 @@ void UnpausedRenderer(STATUS *s)
     DrawRectangle(317,715,206,3,BROWN);
 
     DrawRectangle(320,515,200,200,CLITERAL(Color){ 0, 0, 0, 220 });
-    DrawTextureEx(sapo,(Vector2){325,500},0,3,s->player.spriteColor);
+    RenderizaSapo((Vector2){325,500},3);
 
     DrawTextEx(fonteTitle, TextFormat("Bombas:%d",status_jogo_atual.player.bombAmount), (Vector2){50,570}, 50, 0, BLACK);
     DrawTextEx(fonteTitle, TextFormat("Bombas:%d",status_jogo_atual.player.bombAmount), (Vector2){53,573}, 50, 0, CLITERAL(Color){0,220,220,255});
@@ -831,6 +892,9 @@ void UnpausedRenderer(STATUS *s)
 
     DrawTextEx(fonteTitle, TextFormat("Tempo:%.1f s",tempo_atual), (Vector2){600,570}, 50, 0, BLACK);
     DrawTextEx(fonteTitle, TextFormat("Tempo:%.1f s",tempo_atual), (Vector2){603,573}, 50, 0, CLITERAL(Color){0,220,220,255});
+    DrawTextEx(fonteTitle, TextFormat("Pontuacao:%d ",status_jogo_atual.pontuacao), (Vector2){600,640}, 50, 0, BLACK);
+    DrawTextEx(fonteTitle, TextFormat("Pontuacao:%d ",status_jogo_atual.pontuacao), (Vector2){603,643}, 50, 0, CLITERAL(Color){0,220,220,255});
+
 }
 /* A funcao NovoJogo recebe um struct STATUS, criado ao inicializar o jogo, que armazena as principais informacos sobre o jogo, e confere a ele os valores padrao de um novo jogo,
 tambem coloca a bool GameStart como true, para o jogo sair do menu principal e comecar */
@@ -904,10 +968,20 @@ void MoveProjeteis(PROJETIL *projetil)
 void LimpadorProjetil(PROJETIL *projetil)
 {
     projetil->airTime-=GetFrameTime();
+    int posi = trunc(projetil->bullet.posCenter.y/15);
+    int posj=trunc(projetil->bullet.posCenter.x/15);
     if(projetil->airTime<=0)
     {
         projetil->ativo=false;
         projetil->airTime=3;
+    }
+    if(status_jogo_atual.CurrentLevelMatrix[posi][posj]=='#')
+    {
+        if(CheckCollisionCircleRec(projetil->bullet.posCenter,projetil->bullet.radius,(Rectangle){.x=posj*15,.y=posi*15,.width=15,.height=15}))
+            {
+                projetil->ativo=false;
+
+            }
     }
 
 
@@ -1053,7 +1127,7 @@ void BombaColocadaRenderer(BOMB_EXPL *b)
     if(b->obj.frameTime<=0)
     {
         b->obj.frameIndex+=1;
-        b->obj.frameTime=0.1;
+        b->obj.frameTime=0.075;
     }
     if(b->obj.frameIndex==16)
     {
@@ -1606,6 +1680,13 @@ int main()
     FundoStats=LoadTexture("fundo.png");
     sapoVermelho=LoadTexture("sapoVermelho.png");
     spriteTrap=LoadTexture("trap.png");
+    sapoDmg01=LoadTexture("sapoTodoCoitado01.png");
+    sapoDmg02=LoadTexture("sapoTodoCoitado02.png");
+    sapoDmg03=LoadTexture("sapoTodoCoitado02_2.png");
+    sapoDmg04=LoadTexture("sapoTodoCoitado03.png");
+    sapoLoco=LoadTexture("sapoLoco.png");
+    sapoLeft=LoadTexture("sapoOlhandoPraEsquerda.png");
+    sapoRight=LoadTexture("sapoOlhandoPraDireita.png");
     SetSoundVolume(deathSoundEnemy,SomDosEfeitosSonoros);
     SetSoundVolume(dmgSoundEnemy,SomDosEfeitosSonoros);
     SetSoundVolume(dmgSound,SomDosEfeitosSonoros);
