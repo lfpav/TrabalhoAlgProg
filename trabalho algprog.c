@@ -12,6 +12,11 @@
 #define LIGHT_BLUE CLITERAL(Color){0,168,255,255}
 #include "raymath.h"
 #include <time.h>
+#define MAX(a, b) ((a)>(b)? (a) : (b))
+#define MIN(a, b) ((a)<(b)? (a) : (b))
+
+#define WindowWidth 900
+#define WindowHeight 750
 /* declaracao de variaveis */
 
 typedef struct Circle_t
@@ -117,6 +122,11 @@ bool jogoAtivo=true;
 int invulnTime=0;
 float tempo_i_chase =0;
 float sizeMulti[5]={1,1,1,1,1};
+float Escala = 0;
+Vector2 mouse;
+Vector2 virtualMouse = { 0 };
+float sizeMulti2[5]={1,1,1,1,1};
+float sizeMulti3[5]={1,1,1,1,1};
 Rectangle RetangulosTitle[3] = {(Rectangle)
 {.x=225,.y=450,.width=360,.height=60},
 {.x=225,.y=550,.width=450,.height=60},
@@ -772,7 +782,7 @@ void PausaRenderer()
     {
         float firstSize = sizeMulti[iPausa];
         DrawRectangle(RetangulosPausa[iPausa].x,RetangulosPausa[iPausa].y,RetangulosPausa[iPausa].width,RetangulosPausa[iPausa].height, BLANK);
-        if(CheckCollisionPointRec(GetMousePosition(),RetangulosPausa[iPausa]))
+        if(CheckCollisionPointRec(virtualMouse,RetangulosPausa[iPausa]))
         {
             sizeMulti[iPausa]=1.25;
         }
@@ -1326,7 +1336,11 @@ void DeathScreenRenderer()
     {
         float firstSize = sizeMulti[iDeath];
         DrawRectangle(RetangulosDeath[iDeath].x,RetangulosDeath[iDeath].y,RetangulosDeath[iDeath].width,RetangulosDeath[iDeath].height, BLANK);
-        if(CheckCollisionPointRec(GetMousePosition(),RetangulosDeath[iDeath]))
+        Vector2 mouse = GetMousePosition();
+            virtualMouse.x = (mouse.x - (GetScreenWidth() - (900*Escala))*0.5f)/Escala;
+            virtualMouse.y = (mouse.y - (GetScreenHeight() - (750*Escala))*0.5f)/Escala;
+            virtualMouse = Vector2Clamp(virtualMouse, (Vector2){ 0, 0 }, (Vector2){ (float)900, (float)750 });
+        if(CheckCollisionPointRec(virtualMouse,RetangulosDeath[iDeath]))
         {
             sizeMulti[iDeath]=1.25;
         }
@@ -1441,7 +1455,7 @@ void MenuConfig()
         {
             float firstSize = sizeMulti[iConfig+2];
             DrawRectangle(RetangulosConfigMenu[iConfig].x,RetangulosConfigMenu[iConfig].y,RetangulosConfigMenu[iConfig].width,RetangulosConfigMenu[iConfig].height, BLANK);
-            if(CheckCollisionPointRec(GetMousePosition(),RetangulosConfigMenu[iConfig]))
+            if(CheckCollisionPointRec(virtualMouse,RetangulosConfigMenu[iConfig]))
             {
                 sizeMulti[iConfig+2]=1.25;
             }
@@ -1460,7 +1474,7 @@ void MenuConfig()
             DrawRectangle(RetangulosDeSomMusica[iSom].x+5, RetangulosDeSomMusica[iSom].y, RetangulosDeSomMusica[iSom].width-10, RetangulosDeSomMusica[iSom].height, cores[1]);
             DrawRectangle(RetangulosDeEfeitoSonoro[iSom].x+5, RetangulosDeEfeitoSonoro[iSom].y, RetangulosDeEfeitoSonoro[iSom].width-10, RetangulosDeEfeitoSonoro[iSom].height, cores[1]);
 
-            if(CheckCollisionPointRec(GetMousePosition(),RetangulosDeSomMusica[iSom]))
+            if(CheckCollisionPointRec(virtualMouse,RetangulosDeSomMusica[iSom]))
             {
                 SomMusica[iSom]=2;
             }
@@ -1469,7 +1483,7 @@ void MenuConfig()
                 SomMusica[iSom]=0;
 
 
-            if(CheckCollisionPointRec(GetMousePosition(),RetangulosDeEfeitoSonoro[iSom]))
+            if(CheckCollisionPointRec(virtualMouse,RetangulosDeEfeitoSonoro[iSom]))
             {
                 SomEfeitosSonoros[iSom]=2;
             }
@@ -1488,6 +1502,21 @@ void MenuConfig()
             {
                 DrawRectangle(RetangulosDeEfeitoSonoro[k].x+6.5, RetangulosDeEfeitoSonoro[k].y+1.5, RetangulosDeEfeitoSonoro[k].width-13, RetangulosDeEfeitoSonoro[k].height-3, cores[0]);
             }
+
+}
+void Fullscreen()
+{
+    if(!IsWindowFullscreen())
+    {
+        int monitor = GetCurrentMonitor();
+        SetWindowSize(GetMonitorWidth(monitor), GetMonitorHeight(monitor));
+        ToggleFullscreen();
+    }
+    else
+    {
+        ToggleFullscreen();
+        SetWindowSize(WindowWidth, WindowHeight);
+    }
 
 }
 void Menu(int type)
@@ -1530,8 +1559,7 @@ void Menu(int type)
                 }
             }
             if(sizeMulti[2]!=1)
-                printf("fullscreen");
-           // Fullscreen();
+              Fullscreen();
 
             if(sizeMulti[3]!=1)
             {
@@ -1577,6 +1605,10 @@ void Menu(int type)
         MenuConfig(&status_jogo_atual);
         PausadoConfig = true;
     }
+     if(IsKeyPressed(KEY_F) && type==2)
+    {
+        Fullscreen();
+    }
     if(IsKeyPressed(KEY_Z) && type==2)
     {
         PausadoConfig = false;
@@ -1595,7 +1627,7 @@ void TitleScreen()
     {
         float firstSize = sizeMulti[iTitle];
         DrawRectangle(RetangulosTitle[iTitle].x,RetangulosTitle[iTitle].y,RetangulosTitle[iTitle].width,RetangulosTitle[iTitle].height,BLANK);
-        if(CheckCollisionPointRec(GetMousePosition(),RetangulosTitle[iTitle]))
+        if(CheckCollisionPointRec(virtualMouse,RetangulosTitle[iTitle]))
         {
             sizeMulti[iTitle]=1.25;
         }
@@ -1660,7 +1692,18 @@ void Trapaca()
 
 int main()
 {
-    InitWindow(900,750, "trabalho");
+    const int windowWidth=WindowWidth;
+    const int windowHeight = WindowHeight;
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT);
+    InitWindow(WindowWidth, WindowHeight, "trabalho");
+    SetWindowMinSize(288, 240);
+
+    int gameScreenWidth = 900;
+    int gameScreenHeight = 750;
+
+    RenderTexture2D target = LoadRenderTexture(gameScreenWidth, gameScreenHeight);
+
+    SetWindowState(FLAG_WINDOW_RESIZABLE);
     SetTargetFPS(60);
     srand(time(NULL));
     InitAudioDevice();
@@ -1713,18 +1756,38 @@ int main()
      }
     while(!WindowShouldClose())
     {
+        Escala = MIN((float)GetScreenWidth() / gameScreenWidth, (float)GetScreenHeight() / gameScreenHeight);
+            Vector2 mouse = GetMousePosition();
+            virtualMouse.x = (mouse.x - (GetScreenWidth() - (gameScreenWidth*Escala))*0.5f)/Escala;
+            virtualMouse.y = (mouse.y - (GetScreenHeight() - (gameScreenHeight*Escala))*0.5f)/Escala;
+            virtualMouse = Vector2Clamp(virtualMouse, (Vector2){ 0, 0 }, (Vector2){ (float)gameScreenWidth, (float)gameScreenHeight });
         while(!GameStart)
         {
+            Escala = MIN((float)GetScreenWidth() / gameScreenWidth, (float)GetScreenHeight() / gameScreenHeight);
+            Vector2 mouse = GetMousePosition();
+            virtualMouse.x = (mouse.x - (GetScreenWidth() - (gameScreenWidth*Escala))*0.5f)/Escala;
+            virtualMouse.y = (mouse.y - (GetScreenHeight() - (gameScreenHeight*Escala))*0.5f)/Escala;
+            virtualMouse = Vector2Clamp(virtualMouse, (Vector2){ 0, 0 }, (Vector2){ (float)gameScreenWidth, (float)gameScreenHeight });
             if(!IsSoundPlaying(titleTheme))
             PlaySound(titleTheme);
-            BeginDrawing();
+            BeginTextureMode(target);
+
             //ClearBackground(WHITE);
             ClearBackground(CLITERAL(Color){200, 200, 180, 255});
             TitleScreen();
+            EndTextureMode();
             tempo_inicio=time(NULL);
+            BeginDrawing();
+             ClearBackground(BLACK);     // Clear screen background
+
+            // Draw render texture to screen, properly scaled
+            DrawTexturePro(target.texture, (Rectangle){ 0.0f, 0.0f, (float)target.texture.width, (float)-target.texture.height },
+                           (Rectangle){ (GetScreenWidth() - ((float)gameScreenWidth*Escala))*0.5f, (GetScreenHeight() - ((float)gameScreenHeight*Escala))*0.5f,
+                           (float)gameScreenWidth*Escala, (float)gameScreenHeight*Escala }, (Vector2){ 0, 0 }, 0.0f, WHITE);
             EndDrawing();
 
         }
+        BeginTextureMode(target);
         if(status_jogo_atual.player.vivo&&jogoAtivo)
         {
             //DrawRectangle(0,0,900,700,CLITERAL(Color){200, 200, 180, 255});
@@ -1784,7 +1847,6 @@ int main()
             Menu(0);
         }
 
-        BeginDrawing();
         //ClearBackground(WHITE);
         ClearBackground(CLITERAL(Color){200, 200, 180, 255});
         JogoRenderer(&status_jogo_atual);
@@ -1809,12 +1871,22 @@ int main()
         {
             DeathScreenRenderer();
         }
+        virtualMouse.x = (mouse.x - (GetScreenWidth() - (gameScreenWidth*Escala))*0.5f)/Escala;
+        virtualMouse.y = (mouse.y - (GetScreenHeight() - (gameScreenHeight*Escala))*0.5f)/Escala;
+        virtualMouse = Vector2Clamp(virtualMouse, (Vector2){ 0, 0 }, (Vector2){ (float)gameScreenWidth, (float)gameScreenHeight });
+        EndTextureMode();
+        BeginDrawing();
+        ClearBackground(BLACK);
+        DrawTexturePro(target.texture, (Rectangle){ 0.0f, 0.0f, (float)target.texture.width, (float)-target.texture.height },
+        (Rectangle){ (GetScreenWidth() - ((float)gameScreenWidth*Escala))*0.5f, (GetScreenHeight() - ((float)gameScreenHeight*Escala))*0.5f,
+        (float)gameScreenWidth*Escala, (float)gameScreenHeight*Escala }, (Vector2){ 0, 0 }, 0.0f, WHITE);
 
         EndDrawing();
 
     }
     StopSound(titleTheme);
     CloseAudioDevice();
+    UnloadRenderTexture(target);
     CloseWindow();
 
 
