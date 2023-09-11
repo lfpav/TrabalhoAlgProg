@@ -424,6 +424,7 @@ void CriaProjetil(PLAYER *p)
                 p->projetilIndex=0;
             }
         }
+        p->playerProj[p->projetilIndex].airTime=3;
         p->playerProj[p->projetilIndex].ativo=true;
         p->playerProj[p->projetilIndex].bullet.posCenter.x=p->dirShooting.x>0?p->posplayer.x+35:p->dirShooting.x<0?p->posplayer.x-5:p->posplayer.x+15;
         p->playerProj[p->projetilIndex].bullet.posCenter.y=p->dirShooting.y>0?p->posplayer.y+35:p->dirShooting.y<0?p->posplayer.y-5:p->posplayer.y+15;
@@ -803,7 +804,7 @@ void RenderizaSapo(Vector2 pos,int scale)
     {
         DrawTextureEx(sapoLoco,pos,0,scale,status_jogo_atual.player.spriteColor);
     }
-    if(status_jogo_atual.player.HP>=4&&status_jogo_atual.player.bombAmount<5)
+    else if(status_jogo_atual.player.HP>=4&&status_jogo_atual.player.bombAmount<5)
     {
         if((int)tempo_atual%2==0)
         {
